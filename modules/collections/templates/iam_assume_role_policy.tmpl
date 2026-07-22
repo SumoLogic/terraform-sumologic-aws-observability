@@ -9,7 +9,7 @@
       "Effect": "Allow",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "stag:${SUMO_LOGIC_ORG_ID}"
+          "sts:ExternalId": "${ENVIRONMENT}:${SUMO_LOGIC_ORG_ID}"
         }
       }
     }
