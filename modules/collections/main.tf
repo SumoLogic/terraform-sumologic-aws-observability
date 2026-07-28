@@ -240,7 +240,7 @@ module "cloudwatch_metrics_source_module" {
 }
 
 module "kinesis_firehose_for_metrics_source_module" {
-  depends_on = [time_sleep.wait_for_minutes]
+  depends_on = [sumologic_collector.collector]
   for_each   = toset(local.create_kf_metrics_source ? ["kinesis_firehose_for_metrics_source_module"] : [])
   # source = "SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseformetrics"
   source = "git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseformetrics?ref=fy27q2"
@@ -274,7 +274,7 @@ module "kinesis_firehose_for_metrics_source_module" {
 }
 
 module "cloudwatch_logs_lambda_log_forwarder_module" {
-  depends_on = [time_sleep.wait_for_minutes]
+  depends_on = [sumologic_collector.collector]
   for_each   = toset(local.create_llf_logs_source ? ["cloudwatch_logs_lambda_log_forwarder_module"] : [])
   # source = "SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchlogsforwarder"
   source = "git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchlogsforwarder?ref=fy27q2"
@@ -307,7 +307,7 @@ module "cloudwatch_logs_lambda_log_forwarder_module" {
 }
 
 module "kinesis_firehose_for_logs_module" {
-  depends_on = [time_sleep.wait_for_minutes]
+  depends_on = [sumologic_collector.collector]
   for_each   = toset(local.create_kf_logs_source ? ["kinesis_firehose_for_logs_module"] : [])
   #source = "SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseforlogs"
   source = "git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseforlogs?ref=fy27q2"
