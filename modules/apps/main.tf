@@ -1,9 +1,16 @@
+resource "sumologic_app" "amazon_overview" {
+  uuid       = local.amazon_overview_app.uuid
+  version    = local.amazon_overview_app.version
+  parameters = local.amazon_overview_app.parameters
+}
+
 resource "sumologic_app" "apps" {
   for_each = {
     for app in local.installation_apps_list : app.name => app
   }
-  uuid    = each.value.uuid
-  version = each.value.version
+  depends_on = [sumologic_app.amazon_overview]
+  uuid       = each.value.uuid
+  version    = each.value.version
   parameters = each.value.parameters
 }
 

@@ -6,5 +6,9 @@ terraform {
       version = ">= 3.1.5"
       source  = "SumoLogic/sumologic"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.11.1"
+    }
   }
 }

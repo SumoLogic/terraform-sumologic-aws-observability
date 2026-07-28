@@ -19,6 +19,13 @@ resource "sumologic_collector" "collector" {
 }
 
 resource "time_sleep" "wait_for_minutes" {
+  depends_on = [
+    aws_iam_role_policy_attachment.cloudtrail_policy_attach,
+    aws_iam_role_policy_attachment.elb_policy_attach,
+    aws_iam_role_policy_attachment.classic_lb_policy_attach,
+    aws_iam_role_policy_attachment.cw_metrics_policy_attach,
+    sumologic_collector.collector,
+  ]
   create_duration = "${var.wait_for_seconds}s"
 }
 

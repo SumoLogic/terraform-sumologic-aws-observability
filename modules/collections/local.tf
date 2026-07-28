@@ -1,15 +1,13 @@
 locals {
   aws_account_id = data.aws_caller_identity.current.account_id
 
-  aws_region = data.aws_region.current.id
-
-  #sumo_account_id = "926226587429"
+  aws_region = data.aws_region.current.region
 
   # sumo aws account ids
   sumo_account_ids = {
-    aws        = "246946804217" # Commercial AWS account
-    aws-us-gov = "246946804217" # GovCloud account
-    aws-cn     = "246946804217" # China account
+    aws        = "926226587429" # Commercial AWS account
+    aws-us-gov = "926226587429" # GovCloud account
+    aws-cn     = "926226587429" # China account
     aws-eusc   = "052162193518" # EU Sovereign account
   }
 

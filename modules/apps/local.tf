@@ -1,4 +1,11 @@
 locals {
+  amazon_overview_app = {
+    uuid       = "32c8b96c-161c-46d4-b81d-235cc0b56b87"
+    name       = "Amazon Overview"
+    version    = "latest"
+    parameters = {}
+  }
+
   installation_apps_list = [
     {
       uuid       = "c26c3149-6131-4b97-b250-adf53ad7cd16"
@@ -15,12 +22,6 @@ locals {
     {
       uuid       = "1354f831-1745-447e-91b9-0dd6b32eebec"
       name       = "Amazon ElastiCache"
-      version    = "latest"
-      parameters = {}
-    },
-    {
-      uuid       = "32c8b96c-161c-46d4-b81d-235cc0b56b87"
-      name       = "Amazon Overview"
       version    = "latest"
       parameters = {}
     },
