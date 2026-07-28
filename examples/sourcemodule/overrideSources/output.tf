@@ -70,11 +70,6 @@ output "sumologic_kinesis_firehose_for_logs_source" {
   description = "This output contains sumologic kinesis firehose for logs source id."
 }
 
-output "kf_logs_auto_enable_stack" {
-  value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? module.collection-module.kinesis_firehose_for_logs_auto_subscribe_stack.auto_enable_logs_subscription.id : ""
-  description = "This output contains Kinesis Firehose for logs auto enable CloudFormation Name."
-}
-
 output "kf_logs_stream" {
   value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? module.collection-module.aws_kinesis_firehose_logs_delivery_stream.name : ""
   description = "This output contains Kinesis Firehose for logs stream Name."
@@ -84,11 +79,6 @@ output "kf_logs_stream" {
 output "sumologic_cloudwatch_logs_source" {
   value       = var.collect_logs_cloudwatch == "Lambda Log Forwarder" ? module.collection-module.cloudwatch_logs_source.id : ""
   description = "This output contains sumologic CloudWatch log source id."
-}
-
-output "cw_logs_auto_enable_stack" {
-  value       = var.collect_logs_cloudwatch == "Lambda Log Forwarder" ? module.collection-module.cloudwatch_logs_auto_subscribe_stack.auto_enable_logs_subscription.id : ""
-  description = "This output contains CloudWatch logs cloudFormation stack."
 }
 
 output "log_forwarder_lambda_name" {
@@ -111,11 +101,6 @@ output "classic_lb_sns_sub" {
   description = "This output contains Classic ELB AWS SNS subscription arn."
 }
 
-output "clb_auto_enable_stack" {
-  value       = var.collect_classic_lb == true ? module.collection-module.classic_lb_auto_enable_stack.auto_enable_access_logs.id : ""
-  description = "This output contains CLB auto enable CloudFormation Name."
-}
-
 output "sumologic_elb_source" {
   value       = var.collect_elb == true ? module.collection-module.elb_source.id : ""
   description = "This output contains sumologic ALB source id."
@@ -129,11 +114,6 @@ output "alb_sns_topic" {
 output "alb_sns_sub" {
   value       = var.collect_elb == true ? module.collection-module.elb_sns_subscription.arn : ""
   description = "This output contains ALB AWS SNS subscription arn."
-}
-
-output "alb_auto_enable_stack" {
-  value       = var.collect_elb == true ? module.collection-module.elb_auto_enable_stack.auto_enable_access_logs.id : ""
-  description = "This output contains ALB auto enable CloudFormation Name."
 }
 
 output "sumologic_field_account" {
