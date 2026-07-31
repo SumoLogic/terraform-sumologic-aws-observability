@@ -240,7 +240,7 @@ module "cloudwatch_metrics_source_module" {
 }
 
 module "kinesis_firehose_for_metrics_source_module" {
-  depends_on = [sumologic_collector.collector]
+  depends_on = [time_sleep.wait_for_minutes]
   for_each   = toset(local.create_kf_metrics_source ? ["kinesis_firehose_for_metrics_source_module"] : [])
   # source = "SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseformetrics"
   source = "git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseformetrics?ref=fy27q2"
