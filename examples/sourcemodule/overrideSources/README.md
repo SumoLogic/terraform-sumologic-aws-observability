@@ -1,7 +1,7 @@
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -11,20 +11,20 @@
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_sumologic"></a> [sumologic](#provider\_sumologic) | >= 3.2.9, < 4.0.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | >= 0.11.1 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
-| <a name="module_collection-module"></a> [collection-module](#module\_collection-module) | ../../../source-module | n/a |
+| ---- | ------ | ------- |
+| <a name="module_collection-module"></a> [collection-module](#module\_collection-module) | ../../../modules/collections | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [sumologic_field.account](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.accountid](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.apiname](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
@@ -61,7 +61,7 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alb_monitors"></a> [alb\_monitors](#input\_alb\_monitors) | Indicates if the ALB Apps monitors should be enabled. true to disable; false to enable. | `bool` | `true` | no |
 | <a name="input_apps_folder"></a> [apps\_folder](#input\_apps\_folder) | Provide a folder name where all the apps will be installed under the Personal folder of the user whose access keys you have entered.<br/>            Default value will be: AWS Observability Apps | `string` | `"AWS Observability Apps"` | no |
 | <a name="input_aws_account_alias"></a> [aws\_account\_alias](#input\_aws\_account\_alias) | Provide the Name/Alias for the AWS environment from which you are collecting data. This name will appear in the Sumo Logic Explorer View, metrics, and logs.<br/>            If you are going to deploy the solution in multiple AWS accounts then this value has to be overidden at main.tf file.<br/>            Do not include special characters in the alias. | `string` | n/a | yes |
@@ -96,8 +96,7 @@
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| <a name="output_alb_auto_enable_stack"></a> [alb\_auto\_enable\_stack](#output\_alb\_auto\_enable\_stack) | This output contains ALB auto enable CloudFormation Name. |
+| ---- | ----------- |
 | <a name="output_alb_sns_sub"></a> [alb\_sns\_sub](#output\_alb\_sns\_sub) | This output contains ALB AWS SNS subscription arn. |
 | <a name="output_alb_sns_topic"></a> [alb\_sns\_topic](#output\_alb\_sns\_topic) | This output contains AWS SNS topic arn. |
 | <a name="output_aws_iam_role"></a> [aws\_iam\_role](#output\_aws\_iam\_role) | This output contains IAM role arn. |
@@ -105,13 +104,10 @@
 | <a name="output_aws_sns_topic"></a> [aws\_sns\_topic](#output\_aws\_sns\_topic) | This output contains AWS SNS topic arn. |
 | <a name="output_classic_lb_sns_sub"></a> [classic\_lb\_sns\_sub](#output\_classic\_lb\_sns\_sub) | This output contains Classic ELB AWS SNS subscription arn. |
 | <a name="output_classic_lb_sns_topic"></a> [classic\_lb\_sns\_topic](#output\_classic\_lb\_sns\_topic) | This output contains AWS SNS topic arn. |
-| <a name="output_clb_auto_enable_stack"></a> [clb\_auto\_enable\_stack](#output\_clb\_auto\_enable\_stack) | This output contains CLB auto enable CloudFormation Name. |
 | <a name="output_cloudtrail_sns_sub"></a> [cloudtrail\_sns\_sub](#output\_cloudtrail\_sns\_sub) | This output contains Cloudtrail AWS SNS subscription arn. |
 | <a name="output_cloudtrail_sns_topic"></a> [cloudtrail\_sns\_topic](#output\_cloudtrail\_sns\_topic) | This output contains AWS SNS topic arn. |
 | <a name="output_collection_folder_id"></a> [collection\_folder\_id](#output\_collection\_folder\_id) | This output contains sumologic Collections output. |
-| <a name="output_cw_logs_auto_enable_stack"></a> [cw\_logs\_auto\_enable\_stack](#output\_cw\_logs\_auto\_enable\_stack) | This output contains CloudWatch logs cloudFormation stack. |
 | <a name="output_cw_metrics_stream"></a> [cw\_metrics\_stream](#output\_cw\_metrics\_stream) | This output contains CloudWatch metrics stream Name. |
-| <a name="output_kf_logs_auto_enable_stack"></a> [kf\_logs\_auto\_enable\_stack](#output\_kf\_logs\_auto\_enable\_stack) | This output contains Kinesis Firehose for logs auto enable CloudFormation Name. |
 | <a name="output_kf_logs_stream"></a> [kf\_logs\_stream](#output\_kf\_logs\_stream) | This output contains Kinesis Firehose for logs stream Name. |
 | <a name="output_kf_metrics_stream"></a> [kf\_metrics\_stream](#output\_kf\_metrics\_stream) | This output contains Kinesis Firehose for metrics stream Name. |
 | <a name="output_log_forwarder_lambda_name"></a> [log\_forwarder\_lambda\_name](#output\_log\_forwarder\_lambda\_name) | This output contains Lambda logs forwarder Function Name. |

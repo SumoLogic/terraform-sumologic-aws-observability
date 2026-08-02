@@ -1,6 +1,6 @@
 # AWS Observability Terraform Module
 
-This Terraform module deploys the [Sumo Logic AWS Observability Solution](https://help.sumologic.com/docs/observability/aws/) — a full-stack observability solution for AWS environments. It configures AWS collection infrastructure and installs Sumo Logic apps, monitors, dashboards, and field extraction rules for the following AWS services:
+This Terraform module deploys the [Sumo Logic AWS Observability Solution](https://help.sumologic.com/docs/observability/aws/) — a full-stack observability solution for AWS environments. It configures AWS collection infrastructure and installs Sumo Logic apps, monitors, dashboards, and field extraction rules for the following AWS services and supporting apps:
 
 - Application Load Balancer (ALB)
 - Classic Load Balancer (ELB)
@@ -9,12 +9,15 @@ This Terraform module deploys the [Sumo Logic AWS Observability Solution](https:
 - CloudTrail
 - DynamoDB
 - EC2
-- ECS
+- ECS (Without Container Insights and Traces)
+- ECS (With Container Insights and Traces)
 - ElastiCache
+- Amazon Overview
 - Lambda
 - RDS
 - SNS
 - SQS
+- Host Metrics (EC2)
 
 ## Usage
 

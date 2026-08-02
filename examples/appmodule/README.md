@@ -1,7 +1,7 @@
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -11,20 +11,20 @@
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_sumologic"></a> [sumologic](#provider\_sumologic) | >= 3.2.9, < 4.0.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | >= 0.11.1 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
-| <a name="module_sumo-module"></a> [sumo-module](#module\_sumo-module) | ../../app-modules | n/a |
+| ---- | ------ | ------- |
+| <a name="module_sumo-module"></a> [sumo-module](#module\_sumo-module) | ../../modules/apps | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [sumologic_field.account](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.accountid](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.apiid](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
@@ -66,7 +66,7 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alb_monitors"></a> [alb\_monitors](#input\_alb\_monitors) | Indicates if the ALB Apps monitors should be enabled. true to disable; false to enable. | `bool` | `true` | no |
 | <a name="input_apps_folder"></a> [apps\_folder](#input\_apps\_folder) | Provide a folder name where all the apps will be installed under the Personal folder of the user whose access keys you have entered.<br/>            Default value will be: AWS Observability Apps | `string` | `"AWS Observability Apps"` | no |
 | <a name="input_aws_account_alias"></a> [aws\_account\_alias](#input\_aws\_account\_alias) | Provide the Name/Alias for the AWS environment from which you are collecting data. This name will appear in the Sumo Logic Explorer View, metrics, and logs.<br/>            If you are going to deploy the solution in multiple AWS accounts then this value has to be overidden at main.tf file.<br/>            Do not include special characters in the alias. | `string` | n/a | yes |
@@ -85,7 +85,7 @@
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_alb_apps_folder_id"></a> [alb\_apps\_folder\_id](#output\_alb\_apps\_folder\_id) | This output contains sumologic ALB apps folder. |
 | <a name="output_apigateway_apps_folder_id"></a> [apigateway\_apps\_folder\_id](#output\_apigateway\_apps\_folder\_id) | This output contains sumologic API Gateway apps folder. |
 | <a name="output_apps_folder_id"></a> [apps\_folder\_id](#output\_apps\_folder\_id) | This output contains sumologic apps folder. |

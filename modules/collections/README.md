@@ -1,7 +1,7 @@
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -11,7 +11,7 @@
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | n/a |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.1.0 |
@@ -21,20 +21,20 @@
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
-| <a name="module_classic_lb_module"></a> [classic\_lb\_module](#module\_classic\_lb\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/elasticloadbalancing | 1.0.22 |
-| <a name="module_cloudtrail_module"></a> [cloudtrail\_module](#module\_cloudtrail\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudtrail | 1.0.22 |
-| <a name="module_cloudwatch_custom_metrics_source_module"></a> [cloudwatch\_custom\_metrics\_source\_module](#module\_cloudwatch\_custom\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchmetrics | 1.0.22 |
-| <a name="module_cloudwatch_logs_lambda_log_forwarder_module"></a> [cloudwatch\_logs\_lambda\_log\_forwarder\_module](#module\_cloudwatch\_logs\_lambda\_log\_forwarder\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchlogsforwarder | 1.0.22 |
-| <a name="module_cloudwatch_metrics_source_module"></a> [cloudwatch\_metrics\_source\_module](#module\_cloudwatch\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchmetrics | 1.0.22 |
-| <a name="module_elb_module"></a> [elb\_module](#module\_elb\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/elb | 1.0.22 |
-| <a name="module_kinesis_firehose_for_logs_module"></a> [kinesis\_firehose\_for\_logs\_module](#module\_kinesis\_firehose\_for\_logs\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseforlogs | 1.0.22 |
-| <a name="module_kinesis_firehose_for_metrics_source_module"></a> [kinesis\_firehose\_for\_metrics\_source\_module](#module\_kinesis\_firehose\_for\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseformetrics | 1.0.22 |
+| ---- | ------ | ------- |
+| <a name="module_classic_lb_module"></a> [classic\_lb\_module](#module\_classic\_lb\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/elasticloadbalancing | fy27q2 |
+| <a name="module_cloudtrail_module"></a> [cloudtrail\_module](#module\_cloudtrail\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudtrail | fy27q2 |
+| <a name="module_cloudwatch_custom_metrics_source_module"></a> [cloudwatch\_custom\_metrics\_source\_module](#module\_cloudwatch\_custom\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchmetrics | fy27q2 |
+| <a name="module_cloudwatch_logs_lambda_log_forwarder_module"></a> [cloudwatch\_logs\_lambda\_log\_forwarder\_module](#module\_cloudwatch\_logs\_lambda\_log\_forwarder\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchlogsforwarder | fy27q2 |
+| <a name="module_cloudwatch_metrics_source_module"></a> [cloudwatch\_metrics\_source\_module](#module\_cloudwatch\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchmetrics | fy27q2 |
+| <a name="module_elb_module"></a> [elb\_module](#module\_elb\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/elb | fy27q2 |
+| <a name="module_kinesis_firehose_for_logs_module"></a> [kinesis\_firehose\_for\_logs\_module](#module\_kinesis\_firehose\_for\_logs\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseforlogs | fy27q2 |
+| <a name="module_kinesis_firehose_for_metrics_source_module"></a> [kinesis\_firehose\_for\_metrics\_source\_module](#module\_kinesis\_firehose\_for\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseformetrics | fy27q2 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_policy.classic_lb_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.cloudtrail_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.cw_metrics_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -57,15 +57,14 @@
 | [sumologic_collector.collector](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/collector) | resource |
 | [time_sleep.wait_for_minutes](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 | [sumologic_caller_identity.current](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/data-sources/caller_identity) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_access_id"></a> [access\_id](#input\_access\_id) | Sumo Logic Access ID. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
-| <a name="input_access_key"></a> [access\_key](#input\_access\_key) | Sumo Logic Access Key. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_auto_enable_access_logs"></a> [auto\_enable\_access\_logs](#input\_auto\_enable\_access\_logs) | Enable Application Load Balancer (ALB) Access logging.<br/>            You have the following options:<br/>            New - Automatically enables access logging for newly created ALB resources to collect logs for ALB resources. This does not affect ALB resources already collecting logs.<br/>            Existing - Automatically enables access logging for existing ALB resources to collect logs for ALB resources.<br/>            Both - Automatically enables access logging for new and existing ALB resources.<br/>            None - Skips Automatic access Logging enable for ALB resources. | `string` | `"Both"` | no |
 | <a name="input_auto_enable_classic_lb_access_logs"></a> [auto\_enable\_classic\_lb\_access\_logs](#input\_auto\_enable\_classic\_lb\_access\_logs) | Enable Classic Load Balancer (CLB) Access logging.<br/>            You have the following options:<br/>            New - Automatically enables access logging for newly created CLB resources to collect logs for CLB resources. This does not affect CLB resources already collecting logs.<br/>            Existing - Automatically enables access logging for existing CLB resources to collect logs for CLB resources.<br/>            Both - Automatically enables access logging for new and existing CLB resources.<br/>            None - Skips Automatic access Logging enable for CLB resources. | `string` | `"Both"` | no |
 | <a name="input_auto_enable_logs_subscription"></a> [auto\_enable\_logs\_subscription](#input\_auto\_enable\_logs\_subscription) | Subscribe log groups to Sumo Logic Lambda Forwarder.<br/>            You have the following options:<br/>            New - Automatically subscribes new log groups to send logs to Sumo Logic.<br/>            Existing - Automatically subscribes existing log groups to send logs to Sumo Logic.<br/>            Both - Automatically subscribes new and existing log groups.<br/>            None - Skips Automatic subscription. | `string` | `"Both"` | no |
@@ -87,9 +86,12 @@
 | <a name="input_collect_elb_logs"></a> [collect\_elb\_logs](#input\_collect\_elb\_logs) | Create a Sumo Logic ALB Logs Source.<br/>            You have the following options:<br/>			true - to ingest load balancer logs into Sumo Logic. Creates a Sumo Logic Log Source that collects application load balancer logs from an existing bucket or a new bucket.<br/>			If true, please configure \"elb\_source\_details\" with configuration information including the bucket name and path expression to ingest load balancer logs.<br/>			false - you are already ingesting load balancer logs into Sumo Logic. | `bool` | `true` | no |
 | <a name="input_elb_log_source_url"></a> [elb\_log\_source\_url](#input\_elb\_log\_source\_url) | Required if you are already collecting ALB logs. Provide the existing Sumo Logic ALB Source API URL. The account, accountid, and region fields will be added to the Source. For information on how to determine the URL, see [View or Download Source JSON Configuration](https://help.sumologic.com/03Send-Data/Sources/03Use-JSON-to-Configure-Sources/Local-Configuration-File-Management/View-or-Download-Source-JSON-Configuration). | `string` | `""` | no |
 | <a name="input_elb_source_details"></a> [elb\_source\_details](#input\_elb\_source\_details) | Provide details for the Sumo Logic ALB source. If not provided, then defaults will be used.<br/>            To enable collection of application load balancer logs, set collect\_elb\_logs to true and provide configuration information for the bucket.<br/>            If create\_bucket is false, provide a name of an existing S3 bucket where you would like to store loadbalancer logs. If this is empty, a new bucket will be created in the region.<br/>            If create\_bucket is true, the script creates a bucket, the name of the bucket has to be unique; this is achieved internally by generating a random-id and then post-fixing it to the “aws-observability-” string.<br/>            path\_expression - This is required in case the above existing bucket is already configured to receive ALB access logs. If this is blank, Sumo Logic will store logs in the path expression: *elasticloadbalancing/AWSLogs/*/elasticloadbalancing/*/* | <pre>object({<br/>    source_name     = string<br/>    source_category = string<br/>    description     = string<br/>    bucket_details = object({<br/>      create_bucket        = bool<br/>      bucket_name          = string<br/>      path_expression      = string<br/>      force_destroy_bucket = bool<br/>    })<br/>    fields = map(string)<br/>  })</pre> | <pre>{<br/>  "bucket_details": {<br/>    "bucket_name": "aws-observability-random-id",<br/>    "create_bucket": true,<br/>    "force_destroy_bucket": true,<br/>    "path_expression": "*elasticloadbalancing/AWSLogs/<ACCOUNT-ID>/elasticloadbalancing/<REGION-NAME>/*"<br/>  },<br/>  "description": "This source is created using Sumo Logic terraform AWS Observability module to collect AWS Application LoadBalancer logs.",<br/>  "fields": {},<br/>  "source_category": "aws/observability/alb/logs",<br/>  "source_name": "Elb Logs (Region)"<br/>}</pre> | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Enter au, ca, ch, de, eu, esc, fed, jp, kr, us1 or us2. For more information on Sumo Logic deployments visit https://help.sumologic.com/APIs/General-API-Information/Sumo-Logic-Endpoints-and-Firewall-Security | `string` | n/a | yes |
 | <a name="input_existing_iam_details"></a> [existing\_iam\_details](#input\_existing\_iam\_details) | Provide an existing AWS IAM role arn value which provides access to AWS S3 Buckets, AWS CloudWatch Metrics API and Sumo Logic Inventory data.<br/>			If kept empty, a new IAM role will be created with the required permissions.<br/>			For more details on permissions, check the iam policy tmpl files at /source-module/templates folder. | <pre>object({<br/>    create_iam_role = bool<br/>    iam_role_arn    = string<br/>  })</pre> | <pre>{<br/>  "create_iam_role": true,<br/>  "iam_role_arn": ""<br/>}</pre> | no |
+| <a name="input_sumologic_access_id"></a> [sumologic\_access\_id](#input\_sumologic\_access\_id) | Sumo Logic Access ID. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
+| <a name="input_sumologic_access_key"></a> [sumologic\_access\_key](#input\_sumologic\_access\_key) | Sumo Logic Access Key. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
 | <a name="input_sumologic_collector_details"></a> [sumologic\_collector\_details](#input\_sumologic\_collector\_details) | Provide details for the Sumo Logic collector. If not provided, then defaults will be used.<br/>			The Collector will be created if any new source will be created and \"sumologic\_existing\_collector\_id\" is empty. | <pre>object({<br/>    collector_name = string<br/>    description    = string<br/>    fields         = map(string)<br/>  })</pre> | <pre>{<br/>  "collector_name": "AWS Observability (AWS Account Alias) (Account ID)",<br/>  "description": "This collector is created using Sumo Logic terraform AWS Observability module.",<br/>  "fields": {}<br/>}</pre> | no |
+| <a name="input_sumologic_environment"></a> [sumologic\_environment](#input\_sumologic\_environment) | Enter au, ca, ch, de, eu, esc, fed, jp, kr, us1 or us2. For more information on Sumo Logic deployments visit https://help.sumologic.com/APIs/General-API-Information/Sumo-Logic-Endpoints-and-Firewall-Security | `string` | n/a | yes |
+| <a name="input_sumologic_environment_base_url"></a> [sumologic\_environment\_base\_url](#input\_sumologic\_environment\_base\_url) | Base URL for custom Sumo Logic environments (e.g., 'https://api.ch.sumologic.com/api/' for Switzerland). If provided, this takes precedence over the sumologic\_environment parameter. Leave empty for standard deployments. | `string` | `null` | no |
 | <a name="input_sumologic_existing_collector_details"></a> [sumologic\_existing\_collector\_details](#input\_sumologic\_existing\_collector\_details) | Provide an existing Sumo Logic Collector ID. For more details, visit https://help.sumologic.com/03Send-Data/Sources/03Use-JSON-to-Configure-Sources/Local-Configuration-File-Management/View-or-Download-Source-JSON-Configuration<br/>			If provided, all the provided sources will be created within the collector.<br/>			If kept empty, a new Collector will be created and all provided sources will be created within that collector. | <pre>object({<br/>    create_collector = bool<br/>    collector_id     = string<br/>  })</pre> | <pre>{<br/>  "collector_id": "",<br/>  "create_collector": true<br/>}</pre> | no |
 | <a name="input_sumologic_organization_id"></a> [sumologic\_organization\_id](#input\_sumologic\_organization\_id) | You can find your org on the Preferences page in the Sumo Logic UI. For more information, see the Preferences Page topic. Your org ID will be used to configure the IAM Role for Sumo Logic AWS Sources."<br/>            For more details, visit https://help.sumologic.com/01Start-Here/05Customize-Your-Sumo-Logic-Experience/Preferences-Page | `string` | n/a | yes |
 | <a name="input_wait_for_seconds"></a> [wait\_for\_seconds](#input\_wait\_for\_seconds) | wait\_for\_seconds is used to delay sumo logic source creation. The value is in seconds. This helps persisting the IAM role in the AWS system.<br/>            Default value is 180 seconds.<br/>            If the AWS IAM role is created outside the module, the value can be decreased to 1 second. | `number` | `180` | no |
@@ -97,7 +99,7 @@
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_aws_cloudtrail"></a> [aws\_cloudtrail](#output\_aws\_cloudtrail) | AWS Trail created to send CloudTrail logs to AWS S3 bucket. |
 | <a name="output_aws_cloudwatch_metric_stream"></a> [aws\_cloudwatch\_metric\_stream](#output\_aws\_cloudwatch\_metric\_stream) | CloudWatch metrics stream to send metrics. |
 | <a name="output_aws_iam_role"></a> [aws\_iam\_role](#output\_aws\_iam\_role) | Sumo Logic AWS IAM Role for trust relationship. |
@@ -105,7 +107,6 @@
 | <a name="output_aws_kinesis_firehose_metrics_delivery_stream"></a> [aws\_kinesis\_firehose\_metrics\_delivery\_stream](#output\_aws\_kinesis\_firehose\_metrics\_delivery\_stream) | AWS Kinesis firehose delivery stream to send metrics to Sumo Logic. |
 | <a name="output_aws_s3_bucket"></a> [aws\_s3\_bucket](#output\_aws\_s3\_bucket) | Common S3 Bucket to store CloudTrail, ELB and Failed Kinesis data. |
 | <a name="output_aws_sns_topic"></a> [aws\_sns\_topic](#output\_aws\_sns\_topic) | Common SNS topic attached to the S3 bucket. |
-| <a name="output_classic_lb_auto_enable_stack"></a> [classic\_lb\_auto\_enable\_stack](#output\_classic\_lb\_auto\_enable\_stack) | AWS CloudFormation stack for Classic LB Auto Enable access logs. |
 | <a name="output_classic_lb_sns_subscription"></a> [classic\_lb\_sns\_subscription](#output\_classic\_lb\_sns\_subscription) | AWS SNS subscription to Sumo Logic AWS Classic LB source. |
 | <a name="output_classic_lb_sns_topic"></a> [classic\_lb\_sns\_topic](#output\_classic\_lb\_sns\_topic) | SNS topic created to be attached to an existing classic lb logs bucket. |
 | <a name="output_classic_lb_source"></a> [classic\_lb\_source](#output\_classic\_lb\_source) | Sumo Logic AWS Classic LB source. |
@@ -113,15 +114,12 @@
 | <a name="output_cloudtrail_sns_topic"></a> [cloudtrail\_sns\_topic](#output\_cloudtrail\_sns\_topic) | SNS topic created to be attached to an existing cloudtrail bucket. |
 | <a name="output_cloudtrail_source"></a> [cloudtrail\_source](#output\_cloudtrail\_source) | Sumo Logic AWS CloudTrail source. |
 | <a name="output_cloudwatch_custom_metrics_source"></a> [cloudwatch\_custom\_metrics\_source](#output\_cloudwatch\_custom\_metrics\_source) | Sumo Logic CloudWatch Custom Metrics source. |
-| <a name="output_cloudwatch_logs_auto_subscribe_stack"></a> [cloudwatch\_logs\_auto\_subscribe\_stack](#output\_cloudwatch\_logs\_auto\_subscribe\_stack) | AWS CloudFormation stack for Auto Enable logs subscription. |
 | <a name="output_cloudwatch_logs_lambda_function"></a> [cloudwatch\_logs\_lambda\_function](#output\_cloudwatch\_logs\_lambda\_function) | AWS Lambda function to send logs to Sumo Logic. |
 | <a name="output_cloudwatch_logs_source"></a> [cloudwatch\_logs\_source](#output\_cloudwatch\_logs\_source) | Sumo Logic HTTP source. |
 | <a name="output_cloudwatch_metrics_source"></a> [cloudwatch\_metrics\_source](#output\_cloudwatch\_metrics\_source) | Sumo Logic AWS CloudWatch Metrics source. |
-| <a name="output_elb_auto_enable_stack"></a> [elb\_auto\_enable\_stack](#output\_elb\_auto\_enable\_stack) | AWS CloudFormation stack for ALB Auto Enable access logs. |
 | <a name="output_elb_sns_subscription"></a> [elb\_sns\_subscription](#output\_elb\_sns\_subscription) | AWS SNS subscription to Sumo Logic AWS ELB source. |
 | <a name="output_elb_sns_topic"></a> [elb\_sns\_topic](#output\_elb\_sns\_topic) | SNS topic created to be attached to an existing elb logs bucket. |
 | <a name="output_elb_source"></a> [elb\_source](#output\_elb\_source) | Sumo Logic AWS ELB source. |
-| <a name="output_kinesis_firehose_for_logs_auto_subscribe_stack"></a> [kinesis\_firehose\_for\_logs\_auto\_subscribe\_stack](#output\_kinesis\_firehose\_for\_logs\_auto\_subscribe\_stack) | AWS CloudFormation stack for Auto Enable logs subscription. |
 | <a name="output_kinesis_firehose_for_logs_source"></a> [kinesis\_firehose\_for\_logs\_source](#output\_kinesis\_firehose\_for\_logs\_source) | Sumo Logic Kinesis Firehose for Logs source. |
 | <a name="output_kinesis_firehose_for_metrics_source"></a> [kinesis\_firehose\_for\_metrics\_source](#output\_kinesis\_firehose\_for\_metrics\_source) | Sumo Logic AWS Kinesis Firehose for Metrics source. |
 | <a name="output_sumologic_collector"></a> [sumologic\_collector](#output\_sumologic\_collector) | Sumo Logic collector details. |
