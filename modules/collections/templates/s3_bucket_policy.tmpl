@@ -33,7 +33,7 @@
       "Resource": "arn:${AWS_PARTITION}:s3:::${BUCKET_NAME}"
     },
     {
-      "Sid": "AWSAlbLogDeliveryAclCheck",
+      "Sid": "AWSALBLogDeliveryAclCheck",
       "Effect": "Allow",
       "Principal": {
         "Service": "delivery.logs.amazonaws.com"
@@ -42,7 +42,7 @@
       "Resource": "arn:${AWS_PARTITION}:s3:::${BUCKET_NAME}"
     },
     {
-      "Sid": "AddLBLogsStatement",
+      "Sid": "AddALBLogsStatement",
       "Effect": "Allow",
       "Principal": {
         "Service": "logdelivery.elasticloadbalancing.amazonaws.com"
