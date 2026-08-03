@@ -16,6 +16,12 @@ resource "sumologic_collector" "collector" {
   description = var.sumologic_collector_details.description
   fields      = var.sumologic_collector_details.fields
   timezone    = "UTC"
+
+  # Collectorvand all its sources retained on terraform destroy to prevent data loss.
+  # To intentionally delete: run `terraform state rm` on this resource first, then re-run destroy.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "time_sleep" "wait_for_minutes" {
