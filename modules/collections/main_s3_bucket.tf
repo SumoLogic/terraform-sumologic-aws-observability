@@ -9,6 +9,12 @@ resource "aws_s3_bucket" "s3_bucket" {
   bucket        = local.common_bucket_name
   force_destroy = local.common_force_destroy
   tags          = var.aws_resource_tags
+
+  # Bucket is retained on terraform destroy to prevent data loss.
+  # To intentionally delete: run `terraform state rm` on this resource first, then re-run destroy.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_policy" "dump_access_logs_to_s3" {

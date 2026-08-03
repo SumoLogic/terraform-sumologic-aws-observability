@@ -205,7 +205,7 @@ variable "cloudtrail_source_details" {
       create_bucket        = true
       bucket_name          = "aws-observability-random-id"
       path_expression      = "AWSLogs/<ACCOUNT-ID>/CloudTrail/<REGION-NAME>/*"
-      force_destroy_bucket = true
+      force_destroy_bucket = false
     }
     fields = {}
   }
@@ -267,7 +267,7 @@ variable "elb_source_details" {
       create_bucket        = true
       bucket_name          = "aws-observability-random-id"
       path_expression      = "*elasticloadbalancing/AWSLogs/<ACCOUNT-ID>/elasticloadbalancing/<REGION-NAME>/*"
-      force_destroy_bucket = true
+      force_destroy_bucket = false
     }
     fields = {}
   }
@@ -305,7 +305,7 @@ variable "classic_lb_source_details" {
       create_bucket        = true
       bucket_name          = "aws-observability-random-id"
       path_expression      = "*classicloadbalancing/AWSLogs/<ACCOUNT-ID>/elasticloadbalancing/<REGION-NAME>/*"
-      force_destroy_bucket = true
+      force_destroy_bucket = false
     }
     fields = {}
   }
@@ -409,7 +409,7 @@ variable "cloudwatch_metrics_source_details" {
     bucket_details = {
       create_bucket        = true
       bucket_name          = "aws-observability-random-id"
-      force_destroy_bucket = true
+      force_destroy_bucket = false
     }
   }
 }
@@ -474,7 +474,7 @@ variable "cloudwatch_logs_source_details" {
     bucket_details = {
       create_bucket        = true
       bucket_name          = "aws-observability-random-id"
-      force_destroy_bucket = true
+      force_destroy_bucket = false
     }
     lambda_log_forwarder_config = {
       email_id               = "test@gmail.com"
