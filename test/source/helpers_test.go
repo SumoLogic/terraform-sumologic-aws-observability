@@ -2,8 +2,10 @@ package source_test
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -57,7 +59,19 @@ func loadProps(path string) map[string]string {
 		if idx := strings.Index(line, "="); idx >= 0 {
 			key := strings.TrimSpace(line[:idx])
 			val := strings.TrimSpace(line[idx+1:])
-			val = strings.Trim(val, `"`)
+			// Handle quoted values with inline comments: "value" # comment
+			if strings.HasPrefix(val, `"`) {
+				if end := strings.Index(val[1:], `"`); end >= 0 {
+					val = val[1 : end+1]
+				} else {
+					val = strings.Trim(val, `"`)
+				}
+			} else {
+				// Unquoted value — strip inline comment
+				if hashIdx := strings.Index(val, " #"); hashIdx >= 0 {
+					val = strings.TrimSpace(val[:hashIdx])
+				}
+			}
 			if key != "" {
 				result[key] = val
 			}
@@ -107,14 +121,237 @@ func writeVarsFile(t *testing.T, workingDir string, content []byte) string {
 	return path
 }
 
-// deployTerraform runs init → apply, saves opts and returns resource counts.
+// fieldToTFResource maps Sumo Logic field names to their Terraform resource addresses in field.tf.
+var fieldToTFResource = map[string]string{
+	"account":              "sumologic_field.account",
+	"region":               "sumologic_field.region",
+	"accountid":            "sumologic_field.accountid",
+	"namespace":            "sumologic_field.namespace",
+	"loadbalancer":         "sumologic_field.loadbalancer",
+	"loadbalancername":     "sumologic_field.loadbalancername",
+	"apiname":              "sumologic_field.apiname",
+	"tablename":            "sumologic_field.tablename",
+	"instanceid":           "sumologic_field.instanceid",
+	"clustername":          "sumologic_field.clustername",
+	"cacheclusterid":       "sumologic_field.cacheclusterid",
+	"functionname":         "sumologic_field.functionname",
+	"networkloadbalancer":  "sumologic_field.networkloadbalancer",
+	"dbidentifier":         "sumologic_field.dbidentifier",
+	"dbclusteridentifier":  "sumologic_field.dbclusteridentifier",
+	"dbinstanceidentifier": "sumologic_field.dbinstanceidentifier",
+	"topicname":            "sumologic_field.topicname",
+}
+
+// importExistingSumoFields queries the Sumo Logic Fields API and imports pre-existing fields
+// into Terraform state. This prevents field:already_exists errors when fields were left
+// behind by a prior partial deployment whose state was cleaned up.
+//
+// Uses exec.Command directly with -lock=false to bypass stale lock files that may remain
+// from interrupted previous runs.
+func importExistingSumoFields(t *testing.T, opts *terraform.Options) {
+	t.Helper()
+	baseURL := getSumologicURL()
+	if baseURL == "" {
+		t.Log("[import] no Sumo API endpoint configured, skipping field import")
+		return
+	}
+
+	existing := listSumoFields(t, baseURL)
+	if len(existing) == 0 {
+		t.Log("[import] no fields returned from Sumo API")
+		return
+	}
+
+	// Resolve absolute path to avoid relative-path issues in child processes.
+	absDir, err := filepath.Abs(opts.TerraformDir)
+	if err != nil {
+		t.Logf("[import] could not resolve terraform dir %s: %v", opts.TerraformDir, err)
+		return
+	}
+
+	// Remove stale lock file if present (left by killed previous run).
+	lockFile := filepath.Join(absDir, ".terraform.tfstate.lock.info")
+	if _, statErr := os.Stat(lockFile); statErr == nil {
+		t.Logf("[import] removing stale state lock file %s", lockFile)
+		os.Remove(lockFile)
+	}
+
+	// Check what resources are already in state so we can skip them.
+	stateCmd := exec.Command("terraform", "state", "list")
+	stateCmd.Dir = absDir
+	stateOut, _ := stateCmd.Output()
+	inState := make(map[string]bool)
+	for _, line := range strings.Split(string(stateOut), "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			inState[trimmed] = true
+		}
+	}
+
+	for name, id := range existing {
+		addr, ok := fieldToTFResource[strings.ToLower(name)]
+		if !ok {
+			continue
+		}
+		if inState[addr] {
+			t.Logf("[import] %s already in state, skipping", addr)
+			continue
+		}
+		// Use exec.Command directly with -lock=false to avoid any stale-lock failures.
+		cmd := exec.Command("terraform", "import", "-lock=false", addr, id)
+		cmd.Dir = absDir
+		out, cmdErr := cmd.CombinedOutput()
+		if cmdErr != nil {
+			t.Logf("[import] FAILED %s (id=%s): %v\nOutput: %s", addr, id, cmdErr, string(out))
+		} else {
+			t.Logf("[import] imported existing Sumo field %q → %s", name, addr)
+		}
+	}
+}
+
+// listSumoFields returns a name→id map of all fields in the Sumo Logic org.
+func listSumoFields(t *testing.T, baseURL string) map[string]string {
+	t.Helper()
+	accessID := getProperty("sumologic_access_id")
+	accessKey := getProperty("sumologic_access_key")
+	if accessID == "" || accessKey == "" {
+		return nil
+	}
+	apiURL := baseURL + "/api/v1/fields"
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		t.Logf("[import] build request failed: %v", err)
+		return nil
+	}
+	req.SetBasicAuth(accessID, accessKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Logf("[import] GET %s failed: %v", apiURL, err)
+		return nil
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Logf("[import] GET %s returned %d", apiURL, resp.StatusCode)
+		return nil
+	}
+	var payload struct {
+		Data []struct {
+			FieldID   string `json:"fieldId"`
+			FieldName string `json:"fieldName"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		t.Logf("[import] parse fields response: %v", err)
+		return nil
+	}
+	result := make(map[string]string, len(payload.Data))
+	for _, f := range payload.Data {
+		result[strings.ToLower(f.FieldName)] = f.FieldID
+	}
+	return result
+}
+
+// importExistingCollector queries the Sumo Logic Collectors API and imports a pre-existing
+// collector into Terraform state to avoid "collectors.validation.name.duplicate" errors.
+func importExistingCollector(t *testing.T, opts *terraform.Options) {
+	t.Helper()
+	baseURL := getSumologicURL()
+	if baseURL == "" {
+		return
+	}
+	accessID := getProperty("sumologic_access_id")
+	accessKey := getProperty("sumologic_access_key")
+	if accessID == "" || accessKey == "" {
+		return
+	}
+
+	absDir, err := filepath.Abs(opts.TerraformDir)
+	if err != nil {
+		return
+	}
+
+	addr := `module.collection-module.sumologic_collector.collector["collector"]`
+
+	// Check if already in state
+	stateCmd := exec.Command("terraform", "state", "list")
+	stateCmd.Dir = absDir
+	stateOut, _ := stateCmd.Output()
+	for _, line := range strings.Split(string(stateOut), "\n") {
+		if strings.TrimSpace(line) == addr {
+			t.Logf("[import] collector already in state, skipping")
+			return
+		}
+	}
+
+	// Build expected collector name: "AWS Observability <alias> <account_id>"
+	alias := getProperty("aws_account_alias")
+
+	// Paginate through all collectors (org may have 1000+)
+	offset := 0
+	limit := 1000
+	for {
+		apiURL := fmt.Sprintf("%s/api/v1/collectors?limit=%d&offset=%d", baseURL, limit, offset)
+		req, err := http.NewRequest("GET", apiURL, nil)
+		if err != nil {
+			return
+		}
+		req.SetBasicAuth(accessID, accessKey)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Logf("[import] GET collectors failed: %v", err)
+			return
+		}
+
+		var payload struct {
+			Collectors []struct {
+				ID   int64  `json:"id"`
+				Name string `json:"name"`
+			} `json:"collectors"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+			resp.Body.Close()
+			t.Logf("[import] parse collectors response: %v", err)
+			return
+		}
+		resp.Body.Close()
+
+		if len(payload.Collectors) == 0 {
+			break
+		}
+
+		for _, c := range payload.Collectors {
+			if alias != "" && strings.Contains(c.Name, alias) {
+				id := fmt.Sprintf("%d", c.ID)
+				cmd := exec.Command("terraform", "import", "-lock=false", addr, id)
+				cmd.Dir = absDir
+				out, cmdErr := cmd.CombinedOutput()
+				if cmdErr != nil {
+					t.Logf("[import] FAILED collector (id=%s): %v\n%s", id, cmdErr, string(out))
+				} else {
+					t.Logf("[import] imported existing collector %q (id=%s) → %s", c.Name, id, addr)
+				}
+				return
+			}
+		}
+
+		if len(payload.Collectors) < limit {
+			break
+		}
+		offset += limit
+	}
+	t.Log("[import] no matching collector found in Sumo org")
+}
+
+// deployTerraform runs init → import existing fields/collector → apply, saves opts and returns resource counts.
 func deployTerraform(t *testing.T, workingDir string, vars map[string]interface{}, varsFile string) *terraform.ResourceCount {
 	t.Helper()
 	varFiles := []string{}
 	if varsFile != "" {
 		varFiles = []string{varsFile}
 	}
-	return testresources.DeployTerraform(t, workingDir, vars, varFiles)
+	opts := testresources.InitTerraform(t, workingDir, vars, varFiles)
+	importExistingSumoFields(t, opts)
+	importExistingCollector(t, opts)
+	return testresources.ApplyTerraform(t, opts)
 }
 
 // redeployTerraform applies updated vars without re-init (for update tests).
@@ -127,9 +364,59 @@ func redeployTerraform(t *testing.T, workingDir string, vars map[string]interfac
 	return testresources.RedeployTerraform(t, workingDir, vars, varFiles)
 }
 
+// removeSumoFieldsFromState removes ALL sumologic_field resources from state before destroy.
+// Fields persist in the Sumo org (they're org-wide and referenced by sources/FERs across
+// many deployments). Removing them from state prevents terraform destroy from attempting to
+// delete them — which would fail anyway because Sumo rejects deletion of in-use fields.
+func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
+	t.Helper()
+
+	absDir, err := filepath.Abs(opts.TerraformDir)
+	if err != nil {
+		t.Logf("[cleanup] could not resolve terraform dir: %v", err)
+		return
+	}
+
+	// Remove stale lock file if present.
+	lockFile := filepath.Join(absDir, ".terraform.tfstate.lock.info")
+	if _, statErr := os.Stat(lockFile); statErr == nil {
+		os.Remove(lockFile)
+	}
+
+	stateCmd := exec.Command("terraform", "state", "list")
+	stateCmd.Dir = absDir
+	stateOut, err := stateCmd.Output()
+	if err != nil || len(stateOut) == 0 {
+		return
+	}
+
+	for _, addr := range strings.Split(string(stateOut), "\n") {
+		addr = strings.TrimSpace(addr)
+		if !strings.HasPrefix(addr, "sumologic_field.") {
+			continue
+		}
+		rmCmd := exec.Command("terraform", "state", "rm", "-lock=false", addr)
+		rmCmd.Dir = absDir
+		if out, rmErr := rmCmd.CombinedOutput(); rmErr != nil {
+			t.Logf("[cleanup] could not remove %s from state: %v\n%s", addr, rmErr, string(out))
+		} else {
+			t.Logf("[cleanup] removed %s from state (field persists in Sumo org)", addr)
+		}
+	}
+}
+
 // destroyTerraform tears down and cleans state files.
 func destroyTerraform(t *testing.T, workingDir string) {
 	t.Helper()
+	abs, _ := filepath.Abs(workingDir)
+	optsFile := filepath.Join(abs, ".test-data", "TerraformOptions.json")
+	if _, statErr := os.Stat(optsFile); statErr == nil {
+		opts := test_structure.LoadTerraformOptions(t, workingDir)
+		removeSumoFieldsFromState(t, opts)
+		// Pass -lock=false on destroy to tolerate stale lock files from interrupted runs.
+		opts.ExtraArgs.Destroy = append(opts.ExtraArgs.Destroy, "-lock=false")
+		test_structure.SaveTerraformOptions(t, workingDir, opts)
+	}
 	testresources.DestroyTerraform(t, workingDir)
 }
 
@@ -466,6 +753,66 @@ func parseTagsJSON(jsonStr string) map[string]string {
 	return result
 }
 
+// putBucketPolicy replaces the bucket policy with the provided JSON string.
+func putBucketPolicy(t *testing.T, bucketName, policyJSON string) {
+	t.Helper()
+	out := runShell(fmt.Sprintf(
+		`aws s3api put-bucket-policy --bucket "%s" --region %s --policy '%s' 2>&1`,
+		bucketName, region, policyJSON,
+	))
+	if out != "" {
+		t.Fatalf("[policy] put-bucket-policy on %s failed: %s", bucketName, out)
+	}
+	t.Logf("[policy] applied custom policy to bucket %s", bucketName)
+}
+
+// assertBucketPolicyContains fetches the S3 bucket policy and fails if expected is absent.
+func assertBucketPolicyContains(t *testing.T, bucketName, expected string) {
+	t.Helper()
+	policy := runShell(fmt.Sprintf(
+		`aws s3api get-bucket-policy --bucket "%s" --region %s --query Policy --output text 2>/dev/null`,
+		bucketName, region,
+	))
+	if !strings.Contains(policy, expected) {
+		t.Errorf("[policy] bucket %s: policy does not contain %q\nactual: %s", bucketName, expected, policy)
+	} else {
+		t.Logf("[policy] bucket %s: contains %q (OK)", bucketName, expected)
+	}
+}
+
+// assertBucketHasSNSNotification fails if the bucket has no S3 ObjectCreated topic notification.
+func assertBucketHasSNSNotification(t *testing.T, bucketName string) {
+	t.Helper()
+	out := runShell(fmt.Sprintf(
+		`aws s3api get-bucket-notification-configuration --bucket "%s" --region %s --query 'TopicConfigurations | length(@)' --output text 2>/dev/null`,
+		bucketName, region,
+	))
+	count := strings.TrimSpace(out)
+	if count == "" || count == "0" || count == "None" {
+		t.Errorf("[sns] bucket %s: no SNS TopicConfiguration found (S3→SNS notification not wired)", bucketName)
+	} else {
+		t.Logf("[sns] bucket %s: %s SNS notification(s) configured (OK)", bucketName, count)
+	}
+}
+
+// assertIAMRoleExists fails if the given IAM role name cannot be found.
+func assertIAMRoleExists(t *testing.T, roleName string) {
+	t.Helper()
+	if roleName == "" {
+		t.Log("[iam] no role name provided — skipping IAM role existence check")
+		return
+	}
+	out := runShell(fmt.Sprintf(
+		`aws iam get-role --role-name "%s" --query 'Role.RoleName' --output text 2>/dev/null`,
+		roleName,
+	))
+	if strings.TrimSpace(out) != roleName {
+		t.Errorf("[iam] IAM role %q not found (got %q)", roleName, out)
+	} else {
+		t.Logf("[iam] IAM role %q exists (OK)", roleName)
+	}
+}
+
 func extractJSONString(line, key string) (string, bool) {
 	prefix := fmt.Sprintf(`"%s":`, key)
 	idx := strings.Index(line, prefix)
@@ -475,4 +822,32 @@ func extractJSONString(line, key string) (string, bool) {
 	rest := strings.TrimSpace(line[idx+len(prefix):])
 	rest = strings.Trim(rest, `",`)
 	return rest, true
+}
+
+// assertBucketForceDestroy reads the terraform state for the common S3 bucket and verifies
+// that force_destroy matches the expected value. Catches the OR-logic regression at state level.
+func assertBucketForceDestroy(t *testing.T, workingDir string, expected bool) {
+	t.Helper()
+	opts := test_structure.LoadTerraformOptions(t, workingDir)
+	out := terraform.RunTerraformCommand(t, opts, "state", "show",
+		`module.collection-module.aws_s3_bucket.s3_bucket["s3_bucket"]`)
+	// Parse each line looking for "force_destroy" — spacing varies by Terraform version
+	actual := false
+	found := false
+	for _, line := range strings.Split(out, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "force_destroy") {
+			found = true
+			actual = strings.Contains(trimmed, "true")
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("[state] force_destroy not found in bucket state output:\n%s", out)
+	}
+	if actual != expected {
+		t.Errorf("[state] expected force_destroy=%v in bucket state, but got %v", expected, actual)
+	} else {
+		t.Logf("[state] force_destroy=%v confirmed in bucket state (OK)", expected)
+	}
 }

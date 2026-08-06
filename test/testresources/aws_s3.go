@@ -161,6 +161,60 @@ func (b *AWSS3Bucket) AssertExists(t *testing.T) {
 
 func (b *AWSS3Bucket) ID() string { return b.name }
 
+// PutObject uploads a small object to the bucket. Useful for making a bucket
+// non-empty so that force_destroy=false prevents deletion on terraform destroy.
+func (b *AWSS3Bucket) PutObject(t *testing.T, key string) {
+	name := b.name
+	if name == "" {
+		name = b.Name
+	}
+	client := GetS3Client(t, b.Cfg.region())
+	_, err := client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(name),
+		Key:    aws.String(key),
+		Body:   strings.NewReader("placeholder"),
+	})
+	if err != nil {
+		t.Fatalf("[testresources] PutObject %s/%s failed: %v", name, key, err)
+	}
+	t.Logf("[testresources] PutObject: placed %s in bucket %s", key, name)
+}
+
+// AssertObjectExists fails if the given key does not exist in the bucket.
+func (b *AWSS3Bucket) AssertObjectExists(t *testing.T, key string) {
+	t.Helper()
+	name := b.name
+	if name == "" {
+		name = b.Name
+	}
+	client := GetS3Client(t, b.Cfg.region())
+	_, err := client.HeadObject(context.TODO(), &s3.HeadObjectInput{
+		Bucket: aws.String(name),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		t.Errorf("[testresources] AssertObjectExists: %s/%s not found: %v", name, key, err)
+	} else {
+		t.Logf("[testresources] AssertObjectExists: %s/%s exists (OK)", name, key)
+	}
+}
+
+// AssertNotExists fails if the bucket still exists (used to verify force_destroy=true cleanup).
+func (b *AWSS3Bucket) AssertNotExists(t *testing.T) {
+	t.Helper()
+	name := b.name
+	if name == "" {
+		name = b.Name
+	}
+	client := GetS3Client(t, b.Cfg.region())
+	_, err := client.HeadBucket(context.TODO(), &s3.HeadBucketInput{Bucket: aws.String(name)})
+	if err == nil {
+		t.Errorf("[testresources] AssertNotExists: bucket %s still exists (expected deletion)", name)
+	} else {
+		t.Logf("[testresources] AssertNotExists: bucket %s confirmed deleted (OK)", name)
+	}
+}
+
 func (b *AWSS3Bucket) emptyBucket(t *testing.T, client *s3.Client) {
 	paginator := s3.NewListObjectsV2Paginator(client, &s3.ListObjectsV2Input{Bucket: aws.String(b.name)})
 	for paginator.HasMorePages() {

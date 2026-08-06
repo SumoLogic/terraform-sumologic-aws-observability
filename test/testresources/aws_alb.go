@@ -26,7 +26,15 @@ func (a *AWSALB) Create(t *testing.T) string {
 		region,
 	))
 	if vpcID == "" || vpcID == "None" {
-		t.Fatalf("[testresources] AWSALB: no default VPC in %s", region)
+		// No default VPC — fall back to the first available VPC in the region
+		vpcID = shellOutput(fmt.Sprintf(
+			`aws ec2 describe-vpcs --region %s --query 'Vpcs[0].VpcId' --output text`,
+			region,
+		))
+		if vpcID == "" || vpcID == "None" {
+			t.Fatalf("[testresources] AWSALB: no VPC found in %s", region)
+		}
+		t.Logf("[testresources] AWSALB: no default VPC, using %s", vpcID)
 	}
 
 	subnets := shellOutput(fmt.Sprintf(
@@ -34,7 +42,14 @@ func (a *AWSALB) Create(t *testing.T) string {
 		region,
 	))
 	if subnets == "" {
-		t.Fatalf("[testresources] AWSALB: no default-VPC subnets in %s", region)
+		// No default subnets — fall back to any subnets in the resolved VPC
+		subnets = shellOutput(fmt.Sprintf(
+			`aws ec2 describe-subnets --region %s --filters "Name=vpc-id,Values=%s" --query 'Subnets[*].SubnetId' --output text`,
+			region, vpcID,
+		))
+	}
+	if subnets == "" {
+		t.Fatalf("[testresources] AWSALB: no subnets found in VPC %s (%s)", vpcID, region)
 	}
 	subnetArgs := ""
 	for _, s := range strings.Fields(subnets) {

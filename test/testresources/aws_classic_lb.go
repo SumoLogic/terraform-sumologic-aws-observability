@@ -23,16 +23,31 @@ func (c *AWSClassicLB) Create(t *testing.T) string {
 		region,
 	))
 	if vpcID == "" || vpcID == "None" {
-		t.Fatalf("[testresources] AWSClassicLB: no default VPC in %s", region)
+		// No default VPC — fall back to the first available VPC in the region
+		vpcID = shellOutput(fmt.Sprintf(
+			`aws ec2 describe-vpcs --region %s --query 'Vpcs[0].VpcId' --output text`,
+			region,
+		))
+		if vpcID == "" || vpcID == "None" {
+			t.Fatalf("[testresources] AWSClassicLB: no VPC found in %s", region)
+		}
+		t.Logf("[testresources] AWSClassicLB: no default VPC, using %s", vpcID)
 	}
 
 	subnets := shellOutput(fmt.Sprintf(
 		`aws ec2 describe-subnets --region %s --filters "Name=default-for-az,Values=true" --query 'Subnets[*].SubnetId' --output text`,
 		region,
 	))
+	if subnets == "" {
+		// No default subnets — fall back to any subnets in the resolved VPC
+		subnets = shellOutput(fmt.Sprintf(
+			`aws ec2 describe-subnets --region %s --filters "Name=vpc-id,Values=%s" --query 'Subnets[*].SubnetId' --output text`,
+			region, vpcID,
+		))
+	}
 	subnetList := strings.Fields(subnets)
 	if len(subnetList) < 2 {
-		t.Fatalf("[testresources] AWSClassicLB: need at least 2 subnets, found %d", len(subnetList))
+		t.Fatalf("[testresources] AWSClassicLB: need at least 2 subnets in VPC %s, found %d", vpcID, len(subnetList))
 	}
 
 	sgName := c.Name + "-sg"

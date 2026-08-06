@@ -13,8 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// DeployTerraform runs init → apply and saves TerraformOptions for later stages.
-func DeployTerraform(t *testing.T, workingDir string, vars map[string]interface{}, varFiles []string) *terraform.ResourceCount {
+// InitTerraform runs init, saves options, and returns them for further steps.
+func InitTerraform(t *testing.T, workingDir string, vars map[string]interface{}, varFiles []string) *terraform.Options {
+	t.Helper()
 	opts := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: workingDir,
 		Vars:         vars,
@@ -23,8 +24,20 @@ func DeployTerraform(t *testing.T, workingDir string, vars map[string]interface{
 	})
 	test_structure.SaveTerraformOptions(t, workingDir, opts)
 	terraform.Init(t, opts)
+	return opts
+}
+
+// ApplyTerraform runs apply with already-initialized options and returns resource counts.
+func ApplyTerraform(t *testing.T, opts *terraform.Options) *terraform.ResourceCount {
+	t.Helper()
 	out := terraform.Apply(t, opts)
 	return terraform.GetResourceCount(t, out)
+}
+
+// DeployTerraform runs init → apply and saves TerraformOptions for later stages.
+func DeployTerraform(t *testing.T, workingDir string, vars map[string]interface{}, varFiles []string) *terraform.ResourceCount {
+	opts := InitTerraform(t, workingDir, vars, varFiles)
+	return ApplyTerraform(t, opts)
 }
 
 // RedeployTerraform updates saved options with new vars and re-applies (for update tests).
