@@ -4,6 +4,7 @@ variable "sumologic_environment" {
 
   validation {
     condition = contains([
+      "stag",
       "au",
       "ca",
       "ch",
@@ -15,7 +16,7 @@ variable "sumologic_environment" {
       "kr",
       "us1",
     "us2"], var.sumologic_environment)
-    error_message = "The value must be one of au, ca, ch, de, eu, esc, fed, jp, kr, us1 or us2."
+    error_message = "The value must be one of stag, au, ca, ch, de, eu, esc, fed, jp, kr, us1 or us2."
   }
 }
 
@@ -86,22 +87,22 @@ variable "sumologic_folder_share_with_org" {
 
 }
 
-variable "sumo_api_endpoint" {
-  type = string
+variable "sumologic_environment_base_url" {
+  type        = string
+  description = "Base URL for custom Sumo Logic environments (e.g., staging). When set, overrides the endpoint derived from sumologic_environment. Leave empty for standard deployments."
+  default     = ""
   validation {
-    condition = contains([
-      "https://api.au.sumologic.com/api/",
-      "https://api.ca.sumologic.com/api/",
-      "https://api.ch.sumologic.com/api/",
-      "https://api.de.sumologic.com/api/",
-      "https://api.eu.sumologic.com/api/",
-      "https://api.esc.sumologic.com/api/",
-      "https://api.fed.sumologic.com/api/",
-      "https://api.jp.sumologic.com/api/",
-      "https://api.sumologic.com/api/",
-      "https://api.us2.sumologic.com/api/",
-    "https://api.kr.sumologic.com/api/"], var.sumo_api_endpoint)
-    error_message = "Argument \"sumo_api_endpoint\" must be one of the values specified at https://help.sumologic.com/APIs/General-API-Information/Sumo-Logic-Endpoints-and-Firewall-Security."
+    condition     = var.sumologic_environment_base_url == "" || can(regex("^https://[a-zA-Z0-9.-]+\\.sumologic\\.(com|net)/api/?$", var.sumologic_environment_base_url))
+    error_message = "sumologic_environment_base_url must be a valid Sumo Logic API URL."
+  }
+}
+
+variable "sumo_api_endpoint" {
+  type    = string
+  default = ""
+  validation {
+    condition     = var.sumo_api_endpoint == "" || can(regex("^https://[a-zA-Z0-9.-]+\\.sumologic\\.(com|net)/api/?$", var.sumo_api_endpoint))
+    error_message = "Argument \"sumo_api_endpoint\" must be a valid Sumo Logic API endpoint URL."
   }
 }
 
@@ -353,6 +354,38 @@ variable "s3_name" {
   description = "Required if you already have a S3 bucket."
   default     = ""
 }
+variable "cloudtrail_details" {
+  type = object({
+    source_name     = string
+    source_category = string
+    description     = string
+    bucket_details = object({
+      create_bucket        = bool
+      bucket_name          = string
+      path_expression      = string
+      force_destroy_bucket = bool
+    })
+    fields = map(string)
+  })
+  description = "Provide details for the Sumo Logic CloudTrail source. If not provided, defaults will be used."
+  default = {
+    source_name     = "CloudTrail Logs (Region)"
+    source_category = "aws/observability/cloudtrail/logs"
+    description     = "This source is created using Sumo Logic terraform AWS Observability module to collect AWS CloudTrail logs."
+    bucket_details = {
+      create_bucket        = true
+      bucket_name          = "aws-observability-random-id"
+      path_expression      = "AWSLogs/*/CloudTrail/*"
+      force_destroy_bucket = true
+    }
+    fields = {}
+  }
+  validation {
+    condition     = can(regex("[a-z0-9-.]{3,63}$", var.cloudtrail_details.bucket_details.bucket_name))
+    error_message = "3-63 characters; must contain only lowercase letters, numbers, hyphen or period."
+  }
+}
+
 variable "executeTest1" {
   type        = bool
   description = "True - If you want to execute this TestCase"

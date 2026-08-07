@@ -4,11 +4,16 @@
 module "collection-module" {
   source = "../../../modules/collections"
 
+  providers = {
+    aws       = aws
+    sumologic = sumologic
+  }
+
   aws_account_alias         = var.aws_account_alias
   sumologic_organization_id = var.sumologic_organization_id
-  access_id                 = var.sumologic_access_id
-  access_key                = var.sumologic_access_key
-  environment               = var.sumologic_environment
+  sumologic_access_id       = var.sumologic_access_id
+  sumologic_access_key      = var.sumologic_access_key
+  sumologic_environment     = var.sumologic_environment
 
   sumologic_existing_collector_details = {
     create_collector = var.create_collector
@@ -17,11 +22,13 @@ module "collection-module" {
 
   # ALB logs
   # elb_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/916197188"
-  collect_elb_logs = var.collect_elb
+  collect_elb_logs   = var.collect_elb
+  elb_source_details = var.elb_details
 
   # CLB logs
   # classic_lb_log_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/916197188"
-  collect_classic_lb_logs = var.collect_classic_lb
+  collect_classic_lb_logs   = var.collect_classic_lb
+  classic_lb_source_details = var.classic_lb_details
 
   # CW logs 
   # logs_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/915277706"
@@ -32,7 +39,8 @@ module "collection-module" {
   }
 
   # Enable Collection of Cloudtrail logs
-  collect_cloudtrail_logs = var.collect_cloudtrail
+  collect_cloudtrail_logs   = var.collect_cloudtrail
+  cloudtrail_source_details = var.cloudtrail_details
 
   # Collect CW metrics
   collect_cloudwatch_metrics = var.collect_metric_cloudwatch
