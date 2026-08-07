@@ -35,7 +35,7 @@ output "sumologic_cloudtrail_source" {
 
 # Comment in case of test 4
 output "aws_cloudtrail_name" {
-  value       = try(module.collection-module.aws_cloudtrail.cloudtrail.name, "")
+  value       = var.collect_cloudtrail == true ? module.collection-module.aws_cloudtrail.cloudtrail.name : ""
   description = "This output contains CloudTrail Name."
 }
 
@@ -99,7 +99,7 @@ output "sumologic_classic_lb_source" {
 
 # Only visible in test 4
 output "classic_lb_sns_topic" {
-  value       = try(module.collection-module.classic_lb_sns_topic.sns_topic.arn, "")
+  value       = var.executeTest4 ? module.collection-module.classic_lb_sns_topic.sns_topic.arn : ""
   description = "This output contains AWS SNS topic arn."
 }
 
@@ -115,7 +115,7 @@ output "sumologic_elb_source" {
 
 # Only visible in test 4
 output "alb_sns_topic" {
-  value       = try(module.collection-module.elb_sns_topic.sns_topic.arn, "")
+  value       = var.executeTest4 ? module.collection-module.elb_sns_topic.sns_topic.arn : ""
   description = "This output contains AWS SNS topic arn."
 }
 
