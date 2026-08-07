@@ -5,7 +5,7 @@ locals {
 
   # sumo aws account ids
   sumo_account_ids = {
-    aws        = "246946804217" # Commercial AWS account
+    aws        = "926226587429" # Commercial AWS account
     aws-us-gov = "926226587429" # GovCloud account
     aws-cn     = "926226587429" # China account
     aws-eusc   = "052162193518" # EU Sovereign account
@@ -61,13 +61,7 @@ locals {
   create_kf_logs_fail_bucket    = local.create_kf_logs_source && var.cloudwatch_logs_source_details.bucket_details.create_bucket
   create_common_bucket          = local.create_cloudtrail_bucket || local.create_elb_bucket || local.create_classic_lb_bucket || local.create_kf_metrics_fail_bucket || local.create_kf_logs_fail_bucket
   common_bucket_name            = local.create_common_bucket ? "aws-observability-${random_string.aws_random.id}" : ""
-  common_force_destroy = local.create_common_bucket && (
-    (!local.create_cloudtrail_bucket || var.cloudtrail_source_details.bucket_details.force_destroy_bucket) &&
-    (!local.create_elb_bucket || var.elb_source_details.bucket_details.force_destroy_bucket) &&
-    (!local.create_classic_lb_bucket || var.classic_lb_source_details.bucket_details.force_destroy_bucket) &&
-    (!local.create_kf_metrics_fail_bucket || var.cloudwatch_metrics_source_details.bucket_details.force_destroy_bucket) &&
-    (!local.create_kf_logs_fail_bucket || var.cloudwatch_logs_source_details.bucket_details.force_destroy_bucket)
-  )
+  common_force_destroy          = local.create_common_bucket && (var.cloudtrail_source_details.bucket_details.force_destroy_bucket || var.elb_source_details.bucket_details.force_destroy_bucket || var.cloudwatch_metrics_source_details.bucket_details.force_destroy_bucket || var.cloudwatch_logs_source_details.bucket_details.force_destroy_bucket)
 
   create_common_sns_topic = local.create_common_bucket && (local.create_elb_source || local.create_classic_lb_source || local.create_cloudtrail_source)
 
@@ -98,22 +92,5 @@ locals {
     "SQS"            = 300000,
     "SNS"            = 300000,
     "EC2"            = 300000,
-  }
-
-  # Existing bucket management (create_bucket=false path)
-  update_cloudtrail_bucket = local.create_cloudtrail_source && !var.cloudtrail_source_details.bucket_details.create_bucket
-  update_elb_bucket        = local.create_elb_source && !var.elb_source_details.bucket_details.create_bucket
-  update_classic_lb_bucket = local.create_classic_lb_source && !var.classic_lb_source_details.bucket_details.create_bucket
-
-  existing_bucket_configs = {
-    for bucket_name in distinct(compact([
-      local.update_cloudtrail_bucket ? var.cloudtrail_source_details.bucket_details.bucket_name : "",
-      local.update_elb_bucket ? var.elb_source_details.bucket_details.bucket_name : "",
-      local.update_classic_lb_bucket ? var.classic_lb_source_details.bucket_details.bucket_name : "",
-      ])) : bucket_name => {
-      needs_cloudtrail = local.update_cloudtrail_bucket && var.cloudtrail_source_details.bucket_details.bucket_name == bucket_name
-      needs_elb        = local.update_elb_bucket && var.elb_source_details.bucket_details.bucket_name == bucket_name
-      needs_classic_lb = local.update_classic_lb_bucket && var.classic_lb_source_details.bucket_details.bucket_name == bucket_name
-    }
   }
 }
