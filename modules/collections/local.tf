@@ -65,6 +65,47 @@ locals {
 
   create_common_sns_topic = local.create_common_bucket && (local.create_elb_source || local.create_classic_lb_source || local.create_cloudtrail_source)
 
+  # --- Existing Bucket Detection ---
+  any_existing_bucket_source = (
+    (local.create_cloudtrail_source && !var.cloudtrail_source_details.bucket_details.create_bucket) ||
+    (local.create_elb_source && !var.elb_source_details.bucket_details.create_bucket) ||
+    (local.create_classic_lb_source && !var.classic_lb_source_details.bucket_details.create_bucket)
+  )
+
+  # Deduplicated list of existing bucket names (used for IAM resource ARNs)
+  existing_bucket_names = distinct(compact([
+    local.create_cloudtrail_source && !var.cloudtrail_source_details.bucket_details.create_bucket ? var.cloudtrail_source_details.bucket_details.bucket_name : "",
+    local.create_elb_source && !var.elb_source_details.bucket_details.create_bucket ? var.elb_source_details.bucket_details.bucket_name : "",
+    local.create_classic_lb_source && !var.classic_lb_source_details.bucket_details.create_bucket ? var.classic_lb_source_details.bucket_details.bucket_name : "",
+  ]))
+
+  # Map keyed by "bucket_name-service_type" — one AddBucketPolicy invocation per source
+  existing_bucket_policy_map = {
+    for entry in concat(
+      local.create_cloudtrail_source && !var.cloudtrail_source_details.bucket_details.create_bucket ? [{ bucket_name = var.cloudtrail_source_details.bucket_details.bucket_name, service_type = "CloudTrail" }] : [],
+      local.create_elb_source && !var.elb_source_details.bucket_details.create_bucket ? [{ bucket_name = var.elb_source_details.bucket_details.bucket_name, service_type = "ALB" }] : [],
+      local.create_classic_lb_source && !var.classic_lb_source_details.bucket_details.create_bucket ? [{ bucket_name = var.classic_lb_source_details.bucket_details.bucket_name, service_type = "ELB" }] : [],
+    ) : "${entry.bucket_name}-${entry.service_type}" => entry
+  }
+
+  # Sources list for ConfigureBucketNotifications Lambda (populated after child modules create sources)
+  existing_bucket_sources = [
+    for entry in [
+      local.create_cloudtrail_source && !var.cloudtrail_source_details.bucket_details.create_bucket ? {
+        BucketName   = var.cloudtrail_source_details.bucket_details.bucket_name
+        SumoEndpoint = module.cloudtrail_module["cloudtrail_module"].sumologic_source.url
+      } : null,
+      local.create_elb_source && !var.elb_source_details.bucket_details.create_bucket ? {
+        BucketName   = var.elb_source_details.bucket_details.bucket_name
+        SumoEndpoint = module.elb_module["elb_module"].sumologic_source.url
+      } : null,
+      local.create_classic_lb_source && !var.classic_lb_source_details.bucket_details.create_bucket ? {
+        BucketName   = var.classic_lb_source_details.bucket_details.bucket_name
+        SumoEndpoint = module.classic_lb_module["classic_lb_module"].sumologic_source.url
+      } : null,
+    ] : entry if entry != null
+  ]
+
   # Create an IAM role that provides trust relationship with AWS account
   create_iam_role = var.existing_iam_details.create_iam_role && (local.create_elb_source || local.create_classic_lb_source || local.create_cloudtrail_source || local.create_kf_metrics_source || local.create_cw_metrics_source)
 

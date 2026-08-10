@@ -184,6 +184,7 @@ variable "cloudtrail_source_details" {
     description     = string
     bucket_details = object({
       create_bucket        = bool
+      create_trail         = bool
       bucket_name          = string
       path_expression      = string
       force_destroy_bucket = bool
@@ -195,6 +196,7 @@ variable "cloudtrail_source_details" {
             To enable, set collect_cloudtrail_logs to true and provide configuration information for the bucket at bucket_details.
             If create_bucket is false, provide a name of an existing S3 bucket where you would like to store CloudTrail logs. If this is empty, a new bucket will be created in the region.
             If create_bucket is true, the script creates a bucket, the name of the bucket has to be unique; this is achieved internally by generating a random-id and then post-fixing it to the “aws-observability-” string.
+            create_trail - Set to true to create a new AWS CloudTrail trail. Set to false if a trail already exists writing to the bucket.
             path_expression - This is required in case the above existing bucket is already configured to receive CloudTrail logs. If this is blank, Sumo Logic will store logs in the path expression AWSLogs/*/CloudTrail/*/*.
         EOT
   default = {
@@ -203,6 +205,7 @@ variable "cloudtrail_source_details" {
     description     = "This source is created using Sumo Logic terraform AWS Observability module to collect AWS cloudtrail logs."
     bucket_details = {
       create_bucket        = true
+      create_trail         = true
       bucket_name          = "aws-observability-random-id"
       path_expression      = "AWSLogs/<ACCOUNT-ID>/CloudTrail/<REGION-NAME>/*"
       force_destroy_bucket = true
