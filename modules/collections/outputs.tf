@@ -4,12 +4,24 @@ output "sumologic_collector" {
 }
 
 output "aws_iam_role" {
-  value       = local.create_iam_role ? aws_iam_role.sumologic_iam_role : {}
+  value = local.create_iam_role ? {
+    for k, v in aws_iam_role.sumologic_iam_role : k => {
+      arn  = v.arn
+      name = v.name
+      id   = v.id
+    }
+  } : {}
   description = "Sumo Logic AWS IAM Role for trust relationship."
 }
 
 output "aws_s3_bucket" {
-  value       = local.create_common_bucket ? aws_s3_bucket.s3_bucket : {}
+  value = local.create_common_bucket ? {
+    for k, v in aws_s3_bucket.s3_bucket : k => {
+      id     = v.id
+      arn    = v.arn
+      bucket = v.bucket
+    }
+  } : {}
   description = "Common S3 Bucket to store CloudTrail, ELB and Failed Kinesis data."
 }
 
