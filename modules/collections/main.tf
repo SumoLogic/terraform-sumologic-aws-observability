@@ -128,6 +128,7 @@ module "elb_module" {
     remove_on_delete_stack = true
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }
 
 #CLB module
@@ -184,6 +185,7 @@ module "classic_lb_module" {
     remove_on_delete_stack = true
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }
 
 module "cloudwatch_custom_metrics_source_module" {
@@ -346,4 +348,5 @@ module "kinesis_firehose_for_logs_module" {
     tags_filter = var.auto_enable_logs_subscription_options.tags_filter
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }
