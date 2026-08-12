@@ -5,6 +5,7 @@
 
 resource "random_string" "aws_random" {
   length  = 10
+  numeric = true
   upper   = false
   special = false
 }
@@ -39,7 +40,7 @@ module "cloudtrail_module" {
 
 
   create_collector          = false
-  create_trail              = var.cloudtrail_source_details.bucket_details.create_bucket ? true : false
+  create_trail              = var.cloudtrail_source_details.bucket_details.create_trail
   sumologic_organization_id = var.sumologic_organization_id
   wait_for_seconds          = 1
 
@@ -64,11 +65,14 @@ module "cloudtrail_module" {
       iam_role_arn    = local.create_iam_role ? aws_iam_role.sumologic_iam_role["sumologic_iam_role"].arn : var.existing_iam_details.iam_role_arn
     }
     sns_topic_details = {
-      create_sns_topic = var.cloudtrail_source_details.bucket_details.create_bucket ? false : true
+      create_sns_topic = false
       sns_topic_arn    = var.cloudtrail_source_details.bucket_details.create_bucket ? aws_sns_topic.sns_topic["sns_topic"].arn : ""
     }
   }
-  aws_resource_tags = var.aws_resource_tags
+  create_sns_subscription             = var.cloudtrail_source_details.bucket_details.create_bucket
+  create_existing_bucket_policy       = false
+  create_existing_bucket_notification = false
+  aws_resource_tags                   = var.aws_resource_tags
 }
 
 # #ALB module
@@ -109,10 +113,13 @@ module "elb_module" {
       iam_role_arn    = local.create_iam_role ? aws_iam_role.sumologic_iam_role["sumologic_iam_role"].arn : var.existing_iam_details.iam_role_arn
     }
     sns_topic_details = {
-      create_sns_topic = var.elb_source_details.bucket_details.create_bucket ? false : true
+      create_sns_topic = false
       sns_topic_arn    = var.elb_source_details.bucket_details.create_bucket ? aws_sns_topic.sns_topic["sns_topic"].arn : ""
     }
   }
+  create_sns_subscription             = var.elb_source_details.bucket_details.create_bucket
+  create_existing_bucket_policy       = false
+  create_existing_bucket_notification = false
 
   auto_enable_access_logs = var.auto_enable_access_logs
   app_semantic_version    = "1.0.19"
@@ -121,6 +128,7 @@ module "elb_module" {
     remove_on_delete_stack = true
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }
 
 #CLB module
@@ -161,11 +169,14 @@ module "classic_lb_module" {
       iam_role_arn    = local.create_iam_role ? aws_iam_role.sumologic_iam_role["sumologic_iam_role"].arn : var.existing_iam_details.iam_role_arn
     }
     sns_topic_details = {
-      create_sns_topic = var.classic_lb_source_details.bucket_details.create_bucket ? false : true
+      create_sns_topic = false
       sns_topic_arn    = var.classic_lb_source_details.bucket_details.create_bucket ? aws_sns_topic.sns_topic["sns_topic"].arn : ""
     }
   }
-  auto_enable_access_logs = var.auto_enable_classic_lb_access_logs
+  create_sns_subscription             = var.classic_lb_source_details.bucket_details.create_bucket
+  create_existing_bucket_policy       = false
+  create_existing_bucket_notification = false
+  auto_enable_access_logs             = var.auto_enable_classic_lb_access_logs
   app_semantic_version    = "1.0.19"
   auto_enable_access_logs_options = {
     bucket_prefix          = local.auto_classic_lb_path_exp
@@ -174,6 +185,7 @@ module "classic_lb_module" {
     remove_on_delete_stack = true
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }
 
 module "cloudwatch_custom_metrics_source_module" {
@@ -336,4 +348,5 @@ module "kinesis_firehose_for_logs_module" {
     tags_filter = var.auto_enable_logs_subscription_options.tags_filter
   }
   aws_resource_tags = var.aws_resource_tags
+  aws_cli_profile   = var.aws_cli_profile
 }

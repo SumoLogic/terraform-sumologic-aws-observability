@@ -54,3 +54,46 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     events    = ["s3:ObjectCreated:Put"]
   }
 }
+
+# --- Existing Bucket Handling (via Lambda) ---
+
+resource "aws_lambda_invocation" "add_bucket_policy" {
+  for_each = local.existing_bucket_policy_map
+
+  depends_on    = [aws_lambda_function.lambda_helper]
+  function_name = aws_lambda_function.lambda_helper["lambda_helper"].function_name
+  input = jsonencode({
+    ResourceType       = "Custom::AddBucketPolicy"
+    ResourceProperties = {
+      BucketName  = each.value.bucket_name
+      Partition   = data.aws_partition.current.partition
+      ServiceType = each.value.service_type
+    }
+  })
+
+  lifecycle_scope = "CRUD"
+}
+
+resource "aws_lambda_invocation" "configure_bucket_notifications" {
+  for_each = toset(local.any_existing_bucket_source ? ["configure"] : [])
+
+  depends_on = [
+    aws_lambda_function.lambda_helper,
+    module.cloudtrail_module,
+    module.elb_module,
+    module.classic_lb_module,
+  ]
+  function_name = aws_lambda_function.lambda_helper["lambda_helper"].function_name
+  input = jsonencode({
+    ResourceType       = "Custom::ConfigureBucketNotifications"
+    ResourceProperties = {
+      Region    = local.aws_region
+      AccountId = local.aws_account_id
+      Partition = data.aws_partition.current.partition
+      StackId   = "terraform/${random_string.aws_random.id}"
+      Sources   = local.existing_bucket_sources
+    }
+  })
+
+  lifecycle_scope = "CRUD"
+}
