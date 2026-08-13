@@ -21,6 +21,18 @@ This Terraform module deploys the [Sumo Logic AWS Observability Solution](https:
 
 ## Usage
 
+### Configuration (`main.auto.tfvars`)
+
+Create a `main.auto.tfvars` file with your environment-specific values:
+
+```hcl
+sumologic_environment     = "us2"                  # Sumo Logic deployment: au, ca, ch, de, eu, fed, jp, kr, us1, us2
+sumologic_access_id       = "<YOUR SUMO ACCESS ID>"
+sumologic_access_key      = "<YOUR SUMO ACCESS KEY>"
+sumologic_organization_id = "<YOUR SUMO ORG ID>"
+aws_account_alias         = "<AWS_ACCOUNT_ALIAS>"           # Lowercase letters and numbers only
+```
+
 ```hcl
 provider "sumologic" {
   environment = var.sumologic_environment
@@ -43,6 +55,8 @@ module "aws_observability" {
   aws_account_alias         = "prod"
 }
 ```
+
+
 
 For multi-account or multi-region deployments, use the submodules directly:
 

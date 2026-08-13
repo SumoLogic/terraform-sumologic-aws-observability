@@ -130,6 +130,7 @@ dmypy.json
 
 # Terraform
 terraform
+main.auto.tfvars
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
