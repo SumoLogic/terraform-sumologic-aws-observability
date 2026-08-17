@@ -82,3 +82,33 @@ variable "aws_resource_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "cloudwatch_metrics_source_url" {
+  type        = string
+  description = "Required if you are already collecting CloudWatch Metrics. Provide the existing Sumo Logic Metrics Source API URL. e.g. https://api.us2.sumologic.com/api/v1/collectors/<collectorId>/sources/<sourceId>"
+  default     = ""
+}
+
+variable "cloudwatch_logs_source_url" {
+  type        = string
+  description = "Required if you are already collecting CloudWatch Logs. Provide the existing Sumo Logic Logs Source API URL. e.g. https://api.us2.sumologic.com/api/v1/collectors/<collectorId>/sources/<sourceId>"
+  default     = ""
+}
+
+variable "cloudtrail_source_url" {
+  type        = string
+  description = "Required if you are already collecting CloudTrail logs. Provide the existing Sumo Logic CloudTrail Source API URL."
+  default     = ""
+}
+
+variable "elb_log_source_url" {
+  type        = string
+  description = "Required if you are already collecting ALB logs. Provide the existing Sumo Logic ALB Source API URL."
+  default     = ""
+}
+
+variable "classic_lb_log_source_url" {
+  type        = string
+  description = "Required if you are already collecting Classic LB logs. Provide the existing Sumo Logic Classic LB Source API URL."
+  default     = ""
+}
