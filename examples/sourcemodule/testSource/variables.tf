@@ -364,6 +364,7 @@ variable "cloudtrail_details" {
       bucket_name          = string
       path_expression      = string
       force_destroy_bucket = bool
+      create_trail         = bool
     })
     fields = map(string)
   })
@@ -377,6 +378,7 @@ variable "cloudtrail_details" {
       bucket_name          = "aws-observability-random-id"
       path_expression      = "AWSLogs/*/CloudTrail/*"
       force_destroy_bucket = true
+      create_trail         = true
     }
     fields = {}
   }

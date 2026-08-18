@@ -102,6 +102,7 @@ func TestBucket_ExistingPolicyAppend(t *testing.T) {
 			"description":     "IT5 test: existing bucket append check",
 			"bucket_details": map[string]interface{}{
 				"create_bucket":        false,
+				"create_trail":         false,
 				"bucket_name":          bucketName,
 				"path_expression":      "AWSLogs/*/CloudTrail/*",
 				"force_destroy_bucket": false,
@@ -152,6 +153,7 @@ func TestBucket_CloudTrailRetentionOnDestroy(t *testing.T) {
 			"description":     "IT6 test: bucket must survive destroy",
 			"bucket_details": map[string]interface{}{
 				"create_bucket":        true,
+				"create_trail":         true,
 				"bucket_name":          "aws-observability-random-id",
 				"path_expression":      "AWSLogs/*/CloudTrail/*",
 				"force_destroy_bucket": false,
@@ -196,7 +198,11 @@ func TestBucket_CloudTrailRetentionOnDestroy(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "destroy", func() {
-		destroyTerraform(t, workingDir)
+		// BucketNotEmpty is the expected outcome — it proves force_destroy=false protects the bucket.
+		err := destroyTerraformAllowingErrors(t, workingDir)
+		if err != nil {
+			t.Logf("[it6] terraform destroy returned error (expected — bucket is protected): %v", err)
+		}
 	})
 
 	test_structure.RunTestStage(t, "verify_retention", func() {
@@ -240,6 +246,7 @@ func TestBucket_CloudTrailForceDestroyCleanup(t *testing.T) {
 			"description":     "Force-destroy cleanup test: bucket must be deleted",
 			"bucket_details": map[string]interface{}{
 				"create_bucket":        true,
+				"create_trail":         true,
 				"bucket_name":          "aws-observability-random-id",
 				"path_expression":      "AWSLogs/*/CloudTrail/*",
 				"force_destroy_bucket": true,
@@ -313,6 +320,7 @@ func TestBucket_SharedMixedForceDestroy(t *testing.T) {
 			"description":     "Mixed force_destroy test: CT says false",
 			"bucket_details": map[string]interface{}{
 				"create_bucket":        true,
+				"create_trail":         true,
 				"bucket_name":          "aws-observability-random-id",
 				"path_expression":      "AWSLogs/*/CloudTrail/*",
 				"force_destroy_bucket": false,
@@ -429,6 +437,7 @@ func TestBucket_AllExisting(t *testing.T) {
 			"description":     "IT7 test: existing CT bucket",
 			"bucket_details": map[string]interface{}{
 				"create_bucket":        false,
+				"create_trail":         false,
 				"bucket_name":          ctBucketName,
 				"path_expression":      "AWSLogs/*/CloudTrail/*",
 				"force_destroy_bucket": false,

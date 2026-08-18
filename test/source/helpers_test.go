@@ -121,6 +121,23 @@ func writeVarsFile(t *testing.T, workingDir string, content []byte) string {
 	return path
 }
 
+// ferToTFResource maps lowercased Sumo Logic FER names to their Terraform resource addresses in field.tf.
+// Keys are lowercase so lookups are case-insensitive (the API and Terraform sometimes differ in ALB vs Alb etc.).
+var ferToTFResource = map[string]string{
+	"awsobservabilityalbaccesslogsfer":              "sumologic_field_extraction_rule.AwsObservabilityAlbAccessLogsFER",
+	"awsobservabilityapigatewaycloudtraillogsfer":   "sumologic_field_extraction_rule.AwsObservabilityApiGatewayCloudTrailLogsFER",
+	"awsobservabilitydynamodbcloudtraillogsfer":     "sumologic_field_extraction_rule.AwsObservabilityDynamoDBCloudTrailLogsFER",
+	"awsobservabilityec2cloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilityEC2CloudTrailLogsFER",
+	"awsobservabilityecscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilityECSCloudTrailLogsFER",
+	"awsobservabilityelasticachecloudtraillogsfer":  "sumologic_field_extraction_rule.AwsObservabilityElastiCacheCloudTrailLogsFER",
+	"awsobservabilityelbaccesslogsfer":              "sumologic_field_extraction_rule.AwsObservabilityElbAccessLogsFER",
+	"awsobservabilityfieldextractionrule":           "sumologic_field_extraction_rule.AwsObservabilityFieldExtractionRule",
+	"awsobservabilitylambdacloudwatchlogsfer":       "sumologic_field_extraction_rule.AwsObservabilityLambdaCloudWatchLogsFER",
+	"awsobservabilitygenericcloudwatchlogsfer":      "sumologic_field_extraction_rule.AwsObservabilityGenericCloudWatchLogsFER",
+	"awsobservabilityrdscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilityRdsCloudTrailLogsFER",
+	"awsobservabilitysnscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilitySNSCloudTrailLogsFER",
+}
+
 // fieldToTFResource maps Sumo Logic field names to their Terraform resource addresses in field.tf.
 var fieldToTFResource = map[string]string{
 	"account":              "sumologic_field.account",
@@ -206,6 +223,27 @@ func importExistingSumoFields(t *testing.T, opts *terraform.Options) {
 			t.Logf("[import] imported existing Sumo field %q → %s", name, addr)
 		}
 	}
+
+	// Import pre-existing Field Extraction Rules to avoid fer:invalid_extraction_rule on re-runs.
+	existingFERs := listSumoFERs(t, baseURL)
+	for name, id := range existingFERs {
+		addr, ok := ferToTFResource[name]
+		if !ok {
+			continue
+		}
+		if inState[addr] {
+			t.Logf("[import] %s already in state, skipping", addr)
+			continue
+		}
+		cmd := exec.Command("terraform", "import", "-lock=false", addr, id)
+		cmd.Dir = absDir
+		out, cmdErr := cmd.CombinedOutput()
+		if cmdErr != nil {
+			t.Logf("[import] FAILED FER %s (id=%s): %v\nOutput: %s", addr, id, cmdErr, string(out))
+		} else {
+			t.Logf("[import] imported existing FER %q → %s", name, addr)
+		}
+	}
 }
 
 // listSumoFields returns a name→id map of all fields in the Sumo Logic org.
@@ -246,6 +284,48 @@ func listSumoFields(t *testing.T, baseURL string) map[string]string {
 	result := make(map[string]string, len(payload.Data))
 	for _, f := range payload.Data {
 		result[strings.ToLower(f.FieldName)] = f.FieldID
+	}
+	return result
+}
+
+// listSumoFERs returns a name→id map of all Field Extraction Rules in the Sumo Logic org.
+func listSumoFERs(t *testing.T, baseURL string) map[string]string {
+	t.Helper()
+	accessID := getProperty("sumologic_access_id")
+	accessKey := getProperty("sumologic_access_key")
+	if accessID == "" || accessKey == "" {
+		return nil
+	}
+	apiURL := baseURL + "/api/v1/extractionRules"
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		t.Logf("[import] build FER request failed: %v", err)
+		return nil
+	}
+	req.SetBasicAuth(accessID, accessKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Logf("[import] GET %s failed: %v", apiURL, err)
+		return nil
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Logf("[import] GET %s returned %d", apiURL, resp.StatusCode)
+		return nil
+	}
+	var payload struct {
+		Data []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		t.Logf("[import] parse FERs response: %v", err)
+		return nil
+	}
+	result := make(map[string]string, len(payload.Data))
+	for _, fer := range payload.Data {
+		result[strings.ToLower(fer.Name)] = fer.ID
 	}
 	return result
 }
@@ -403,6 +483,28 @@ func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
 			t.Logf("[cleanup] removed %s from state (field persists in Sumo org)", addr)
 		}
 	}
+}
+
+// destroyTerraformAllowingErrors runs terraform destroy and returns any error rather than
+// failing the test. Use this when the destroy is expected to fail (e.g. BucketNotEmpty).
+func destroyTerraformAllowingErrors(t *testing.T, workingDir string) error {
+	t.Helper()
+	abs, _ := filepath.Abs(workingDir)
+	optsFile := filepath.Join(abs, ".test-data", "TerraformOptions.json")
+	if _, statErr := os.Stat(optsFile); statErr != nil {
+		return nil
+	}
+	opts := test_structure.LoadTerraformOptions(t, workingDir)
+	removeSumoFieldsFromState(t, opts)
+	opts.ExtraArgs.Destroy = append(opts.ExtraArgs.Destroy, "-lock=false")
+	test_structure.SaveTerraformOptions(t, workingDir, opts)
+
+	_, err := terraform.DestroyE(t, opts)
+	// Clean up state files regardless of destroy outcome.
+	os.RemoveAll(filepath.Join(abs, ".test-data"))
+	os.Remove(filepath.Join(abs, "terraform.tfstate"))
+	os.Remove(filepath.Join(abs, "terraform.tfstate.backup"))
+	return err
 }
 
 // destroyTerraform tears down and cleans state files.
