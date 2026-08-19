@@ -6,3 +6,8 @@ output "installed_apps" {
   } }
   description = "Information about installed Sumo Logic apps"
 }
+
+output "hierarchy_id" {
+  value       = sumologic_hierarchy.awso_hierarchy.id
+  description = "ID of the AWS Observability Entity Inspector hierarchy"
+}

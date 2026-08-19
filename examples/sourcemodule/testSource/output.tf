@@ -35,18 +35,18 @@ output "sumologic_cloudtrail_source" {
 
 # Comment in case of test 4
 output "aws_cloudtrail_name" {
-  value       = var.collect_cloudtrail == true ? module.collection-module.aws_cloudtrail.cloudtrail.name : ""
+  value       = try(module.collection-module.aws_cloudtrail.cloudtrail.name, "")
   description = "This output contains CloudTrail Name."
 }
 
 # Only visible in test 4
 output "cloudtrail_sns_topic" {
-  value       = var.executeTest4 ? module.collection-module.cloudtrail_sns_topic.sns_topic.arn : ""
+  value       = var.executeTest4 ? try(values(module.collection-module.cloudtrail_sns_topic)[0].sns_topic.arn, "") : ""
   description = "This output contains AWS SNS topic arn."
 }
 
 output "cloudtrail_sns_sub" {
-  value       = var.collect_cloudtrail == true ? module.collection-module.cloudtrail_sns_subscription.arn : ""
+  value       = var.collect_cloudtrail == true ? try(values(module.collection-module.cloudtrail_sns_subscription)[0].arn, "") : ""
   description = "This output contains Cloudtrail AWS SNS subscription arn."
 }
 
@@ -99,12 +99,12 @@ output "sumologic_classic_lb_source" {
 
 # Only visible in test 4
 output "classic_lb_sns_topic" {
-  value       = var.executeTest4 ? module.collection-module.classic_lb_sns_topic.sns_topic.arn : ""
+  value       = try(values(module.collection-module.classic_lb_sns_topic)[0].sns_topic.arn, "")
   description = "This output contains AWS SNS topic arn."
 }
 
 output "classic_lb_sns_sub" {
-  value       = var.collect_classic_lb == true ? module.collection-module.classic_lb_sns_subscription.arn : ""
+  value       = var.collect_classic_lb == true ? try(values(module.collection-module.classic_lb_sns_subscription)[0].arn, "") : ""
   description = "This output contains Classic ELB AWS SNS subscription arn."
 }
 
@@ -115,12 +115,12 @@ output "sumologic_elb_source" {
 
 # Only visible in test 4
 output "alb_sns_topic" {
-  value       = var.executeTest4 ? module.collection-module.elb_sns_topic.sns_topic.arn : ""
+  value       = try(values(module.collection-module.elb_sns_topic)[0].sns_topic.arn, "")
   description = "This output contains AWS SNS topic arn."
 }
 
 output "alb_sns_sub" {
-  value       = var.collect_elb == true ? module.collection-module.elb_sns_subscription.arn : ""
+  value       = var.collect_elb == true ? try(values(module.collection-module.elb_sns_subscription)[0].arn, "") : ""
   description = "This output contains ALB AWS SNS subscription arn."
 }
 
