@@ -6,9 +6,9 @@ module "collection-module" {
 
   aws_account_alias         = var.aws_account_alias
   sumologic_organization_id = var.sumologic_organization_id
-  access_id                 = var.sumologic_access_id
-  access_key                = var.sumologic_access_key
-  environment               = var.sumologic_environment
+  sumologic_access_id  = var.sumologic_access_id
+  sumologic_access_key = var.sumologic_access_key
+  sumologic_environment = var.sumologic_environment
 
   sumologic_existing_collector_details = {
     create_collector = var.create_collector
