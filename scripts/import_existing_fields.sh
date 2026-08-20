@@ -38,7 +38,7 @@ FIELD_NAMES=(
 )
 
 echo "Fetching existing fields from Sumo Logic..."
-FIELDS_JSON=$(curl -s -u "$CREDS" "${SUMOLOGIC_BASE_URL}v1/fields")
+FIELDS_JSON=$(curl -s -u "$CREDS" "${SUMOLOGIC_BASE_URL%/}/v1/fields")
 
 imported=0
 skipped=0
