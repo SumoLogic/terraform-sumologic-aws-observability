@@ -119,7 +119,7 @@ variable "metric_namespaces" {
   type        = list(string)
   description = "Enter comma separated metric namespaces."
   # ephemeral = true
-  default = ["AWS/ApplicationELB", "AWS/ApiGateway", "AWS/DynamoDB", "AWS/Lambda", "AWS/RDS", "AWS/ECS", "AWS/ElastiCache", "AWS/ELB", "AWS/NetworkELB", "AWS/SQS", "AWS/SNS", "AWS/EC2"]
+  default = ["AWS/ApplicationELB", "AWS/ApiGateway", "AWS/DynamoDB", "AWS/Lambda", "AWS/RDS", "AWS/ECS", "AWS/ElastiCache", "AWS/ELB", "AWS/NetworkELB", "AWS/SQS", "AWS/SNS", "AWS/EC2", "ECS/ContainerInsights"]
 }
 variable "metrics_tag_filters" {
   type = list(object({

@@ -132,7 +132,8 @@ module "collection-module" {
       "AWS/SQS",
       "AWS/StorageGateway",
       "AWS/VPN",
-      "AWS/WorkSpaces"
+      "AWS/WorkSpaces",
+      "ECS/ContainerInsights"
     ],
     "source_category" : "aws/observability/cloudwatch/metrics/us-east-1",
     "source_name" : "CloudWatch Metrics us-east-1"
