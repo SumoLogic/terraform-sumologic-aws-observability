@@ -89,45 +89,49 @@ See the [`examples/`](./examples) directory for complete working configurations.
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| terraform | >= 1.5.7 |
-| aws | >= 5.16.2, < 7.0.0 |
-| sumologic | >= 3.2.9, < 4.0.0 |
-| time | >= 0.11.1 |
-| random | >= 3.1.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
+| <a name="requirement_sumologic"></a> [sumologic](#requirement\_sumologic) | >= 3.3.0, < 4.0.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| [sumologic](https://registry.terraform.io/providers/SumoLogic/sumologic/latest) | >= 3.2.9, < 4.0.0 |
-| [aws](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 5.16.2, < 7.0.0 |
-| [time](https://registry.terraform.io/providers/hashicorp/time/latest) | >= 0.11.1 |
+No providers.
 
 ## Modules
 
-| Name | Source |
-|------|--------|
-| [sumo-module](./modules/apps) | ./modules/apps |
-| [collection-module](modules/collections) | ./modules/collection |
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_app-module"></a> [app-module](#module\_app-module) | ./modules/apps | n/a |
+| <a name="module_collection-module"></a> [collection-module](#module\_collection-module) | ./modules/collections | n/a |
+
+## Resources
+
+No resources.
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| sumologic\_environment | Sumo Logic deployment region (au, ca, ch, de, eu, esc, fed, jp, kr, us1, us2) | `string` | n/a | yes |
-| sumologic\_access\_id | Sumo Logic Access ID | `string` | n/a | yes |
-| sumologic\_access\_key | Sumo Logic Access Key | `string` | n/a | yes |
-| sumologic\_organization\_id | Sumo Logic Organization ID | `string` | n/a | yes |
-| aws\_account\_alias | Alias for the AWS account (lowercase letters and numbers only) | `string` | n/a | yes |
-| sumologic\_folder\_installation\_location | Where to install the app folder (`"Personal Folder"` or `"Admin Recommended Folder"`) | `string` | `"Personal Folder"` | no |
-| sumologic\_folder\_share\_with\_org | Share the AWS Observability folder with the entire org | `bool` | `true` | no |
-| aws\_resource\_tags | Tags to apply to all AWS resources created by this module | `map(string)` | `{}` | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_aws_account_alias"></a> [aws\_account\_alias](#input\_aws\_account\_alias) | Provide the Name/Alias for the AWS environment from which you are collecting data. This name will appear in the Sumo Logic Explorer View, metrics, and logs.<br/>            If you are going to deploy the solution in multiple AWS accounts then this value has to be overidden at main.tf file.<br/>            Do not include special characters in the alias. | `string` | n/a | yes |
+| <a name="input_aws_resource_tags"></a> [aws\_resource\_tags](#input\_aws\_resource\_tags) | Map of tags to apply to all AWS resources provisioned through the AWS Observability Solution | `map(string)` | `{}` | no |
+| <a name="input_classic_lb_log_source_url"></a> [classic\_lb\_log\_source\_url](#input\_classic\_lb\_log\_source\_url) | Required if you are already collecting Classic LB logs. Provide the existing Sumo Logic Classic LB Source API URL. | `string` | `""` | no |
+| <a name="input_cloudtrail_source_url"></a> [cloudtrail\_source\_url](#input\_cloudtrail\_source\_url) | Required if you are already collecting CloudTrail logs. Provide the existing Sumo Logic CloudTrail Source API URL. | `string` | `""` | no |
+| <a name="input_cloudwatch_logs_source_url"></a> [cloudwatch\_logs\_source\_url](#input\_cloudwatch\_logs\_source\_url) | Required if you are already collecting CloudWatch Logs. Provide the existing Sumo Logic Logs Source API URL. e.g. https://api.us2.sumologic.com/api/v1/collectors/<collectorId>/sources/<sourceId> | `string` | `""` | no |
+| <a name="input_cloudwatch_metrics_source_url"></a> [cloudwatch\_metrics\_source\_url](#input\_cloudwatch\_metrics\_source\_url) | Required if you are already collecting CloudWatch Metrics. Provide the existing Sumo Logic Metrics Source API URL. e.g. https://api.us2.sumologic.com/api/v1/collectors/<collectorId>/sources/<sourceId> | `string` | `""` | no |
+| <a name="input_elb_log_source_url"></a> [elb\_log\_source\_url](#input\_elb\_log\_source\_url) | Required if you are already collecting ALB logs. Provide the existing Sumo Logic ALB Source API URL. | `string` | `""` | no |
+| <a name="input_sumologic_access_id"></a> [sumologic\_access\_id](#input\_sumologic\_access\_id) | Sumo Logic Access ID. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
+| <a name="input_sumologic_access_key"></a> [sumologic\_access\_key](#input\_sumologic\_access\_key) | Sumo Logic Access Key. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
+| <a name="input_sumologic_environment"></a> [sumologic\_environment](#input\_sumologic\_environment) | Enter au, ca, ch, de, eu, esc, fed, jp, kr, us1 or us2. For more information on Sumo Logic deployments visit https://help.sumologic.com/APIs/General-API-Information/Sumo-Logic-Endpoints-and-Firewall-Security | `string` | n/a | yes |
+| <a name="input_sumologic_environment_base_url"></a> [sumologic\_environment\_base\_url](#input\_sumologic\_environment\_base\_url) | Base URL for custom Sumo Logic environments (e.g., 'https://api.ch.sumologic.com/api/' for Switzerland). If provided, this takes precedence over the sumologic\_environment parameter. Leave empty for standard deployments. | `string` | `null` | no |
+| <a name="input_sumologic_organization_id"></a> [sumologic\_organization\_id](#input\_sumologic\_organization\_id) | You can find your org on the Preferences page in the Sumo Logic UI. For more information, see the Preferences Page topic. Your org ID will be used to configure the IAM Role for Sumo Logic AWS Sources."<br/>            For more details, visit https://help.sumologic.com/01Start-Here/05Customize-Your-Sumo-Logic-Experience/Preferences-Page | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| Apps | All outputs related to apps. |
-| Collection | All outputs related to collection and sources. |
+| ---- | ----------- |
+| <a name="output_Apps"></a> [Apps](#output\_Apps) | All outputs related to apps. |
+| <a name="output_Collection"></a> [Collection](#output\_Collection) | All outputs related to collection and sources. |
 <!-- END_TF_DOCS -->
