@@ -13,12 +13,13 @@ find "$BASE_DIR" \
 while IFS= read -r -d '' readme; do
   readme_dir="$(dirname "$readme")"
 
-  if [[ "$readme" == "$BASE_DIR/README.md" ]]; then
-    continue
-  fi
-
   if compgen -G "$readme_dir/*.tf" >/dev/null || compgen -G "$readme_dir/*.tf.json" >/dev/null; then
-    echo "Updating $readme_dir/README.md"
-    (cd "$readme_dir" && terraform-docs markdown . > README.md)
+    if [[ "$readme" == "$BASE_DIR/README.md" ]]; then
+      echo "Updating $BASE_DIR/README.md (inject mode)"
+      (cd "$BASE_DIR" && terraform-docs markdown --output-mode inject --output-file README.md .)
+    else
+      echo "Updating $readme_dir/README.md"
+      (cd "$readme_dir" && terraform-docs markdown . > README.md)
+    fi
   fi
 done

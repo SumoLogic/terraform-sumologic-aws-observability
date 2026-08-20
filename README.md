@@ -85,6 +85,7 @@ See the [`examples/`](./examples) directory for complete working configurations.
 | [modules/apps](./modules/apps) | Installs Sumo Logic apps, monitors, metric rules, FERs, and the AWS Observability hierarchy. Deploy once per Sumo Logic organization. |
 | [modules/collection](modules/collections) | Creates AWS collection infrastructure (CloudTrail, ELB, CloudWatch, Kinesis Firehose sources) and Sumo Logic collector. Deploy once per AWS account/region. |
 
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -129,3 +130,4 @@ See the [`examples/`](./examples) directory for complete working configurations.
 |------|-------------|
 | Apps | All outputs related to apps. |
 | Collection | All outputs related to collection and sources. |
+<!-- END_TF_DOCS -->
