@@ -13,7 +13,7 @@ variable "sumologic_environment" {
       "us2",
       "kr",
       "fed",
-      "esc"
+      "esc",
       "ch"
     ], var.sumologic_environment)
     error_message = "The value must be one of au, ca, de, eu, jp, us1, us2, kr, ch, esc or fed."
