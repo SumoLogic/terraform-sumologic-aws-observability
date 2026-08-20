@@ -4,8 +4,6 @@ variable "sumologic_environment" {
 
   validation {
     condition = contains([
-      "stag",
-      "long",
       "au",
       "ca",
       "de",
@@ -15,9 +13,10 @@ variable "sumologic_environment" {
       "us2",
       "kr",
       "fed",
+      "esc"
       "ch"
     ], var.sumologic_environment)
-    error_message = "The value must be one of au, ca, de, eu, jp, us1, us2, kr, ch or fed."
+    error_message = "The value must be one of au, ca, de, eu, jp, us1, us2, kr, ch, esc or fed."
   }
 }
 
