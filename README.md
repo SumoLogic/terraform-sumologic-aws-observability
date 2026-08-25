@@ -89,7 +89,7 @@ See the [`examples/`](./examples) directory for complete working configurations.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -103,7 +103,7 @@ No providers.
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_app-module"></a> [app-module](#module\_app-module) | ./modules/apps | n/a |
 | <a name="module_collection-module"></a> [collection-module](#module\_collection-module) | ./modules/collections | n/a |
 
@@ -114,7 +114,7 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_aws_account_alias"></a> [aws\_account\_alias](#input\_aws\_account\_alias) | Provide the Name/Alias for the AWS environment from which you are collecting data. This name will appear in the Sumo Logic Explorer View, metrics, and logs.<br/>            If you are going to deploy the solution in multiple AWS accounts then this value has to be overidden at main.tf file.<br/>            Do not include special characters in the alias. | `string` | n/a | yes |
 | <a name="input_aws_resource_tags"></a> [aws\_resource\_tags](#input\_aws\_resource\_tags) | Map of tags to apply to all AWS resources provisioned through the AWS Observability Solution | `map(string)` | `{}` | no |
 | <a name="input_classic_lb_log_source_url"></a> [classic\_lb\_log\_source\_url](#input\_classic\_lb\_log\_source\_url) | Required if you are already collecting Classic LB logs. Provide the existing Sumo Logic Classic LB Source API URL. | `string` | `""` | no |
@@ -131,7 +131,7 @@ No resources.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_Apps"></a> [Apps](#output\_Apps) | All outputs related to apps. |
 | <a name="output_Collection"></a> [Collection](#output\_Collection) | All outputs related to collection and sources. |
 <!-- END_TF_DOCS -->
