@@ -1,7 +1,7 @@
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -11,7 +11,7 @@
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | n/a |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.1.0 |
@@ -21,20 +21,20 @@
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
-| <a name="module_classic_lb_module"></a> [classic\_lb\_module](#module\_classic\_lb\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/elasticloadbalancing | fy27q2 |
-| <a name="module_cloudtrail_module"></a> [cloudtrail\_module](#module\_cloudtrail\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudtrail | fy27q2 |
-| <a name="module_cloudwatch_custom_metrics_source_module"></a> [cloudwatch\_custom\_metrics\_source\_module](#module\_cloudwatch\_custom\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchmetrics | fy27q2 |
-| <a name="module_cloudwatch_logs_lambda_log_forwarder_module"></a> [cloudwatch\_logs\_lambda\_log\_forwarder\_module](#module\_cloudwatch\_logs\_lambda\_log\_forwarder\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchlogsforwarder | fy27q2 |
-| <a name="module_cloudwatch_metrics_source_module"></a> [cloudwatch\_metrics\_source\_module](#module\_cloudwatch\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/cloudwatchmetrics | fy27q2 |
-| <a name="module_elb_module"></a> [elb\_module](#module\_elb\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/elb | fy27q2 |
-| <a name="module_kinesis_firehose_for_logs_module"></a> [kinesis\_firehose\_for\_logs\_module](#module\_kinesis\_firehose\_for\_logs\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseforlogs | fy27q2 |
-| <a name="module_kinesis_firehose_for_metrics_source_module"></a> [kinesis\_firehose\_for\_metrics\_source\_module](#module\_kinesis\_firehose\_for\_metrics\_source\_module) | git::https://github.com/SumoLogic/terraform-sumologic-sumo-logic-integrations.git//aws/kinesisfirehoseformetrics | fy27q2 |
+|------|--------|---------|
+| <a name="module_classic_lb_module"></a> [classic\_lb\_module](#module\_classic\_lb\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/elasticloadbalancing | 3.0.0 |
+| <a name="module_cloudtrail_module"></a> [cloudtrail\_module](#module\_cloudtrail\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudtrail | 3.0.0 |
+| <a name="module_cloudwatch_custom_metrics_source_module"></a> [cloudwatch\_custom\_metrics\_source\_module](#module\_cloudwatch\_custom\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchmetrics | 3.0.0 |
+| <a name="module_cloudwatch_logs_lambda_log_forwarder_module"></a> [cloudwatch\_logs\_lambda\_log\_forwarder\_module](#module\_cloudwatch\_logs\_lambda\_log\_forwarder\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchlogsforwarder | 3.0.0 |
+| <a name="module_cloudwatch_metrics_source_module"></a> [cloudwatch\_metrics\_source\_module](#module\_cloudwatch\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/cloudwatchmetrics | 3.0.0 |
+| <a name="module_elb_module"></a> [elb\_module](#module\_elb\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/elb | 3.0.0 |
+| <a name="module_kinesis_firehose_for_logs_module"></a> [kinesis\_firehose\_for\_logs\_module](#module\_kinesis\_firehose\_for\_logs\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseforlogs | 3.0.0 |
+| <a name="module_kinesis_firehose_for_metrics_source_module"></a> [kinesis\_firehose\_for\_metrics\_source\_module](#module\_kinesis\_firehose\_for\_metrics\_source\_module) | SumoLogic/sumo-logic-integrations/sumologic//aws/kinesisfirehoseformetrics | 3.0.0 |
 
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [aws_iam_policy.classic_lb_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.cloudtrail_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.cw_metrics_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -69,7 +69,7 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_auto_enable_access_logs"></a> [auto\_enable\_access\_logs](#input\_auto\_enable\_access\_logs) | Enable Application Load Balancer (ALB) Access logging.<br/>            You have the following options:<br/>            New - Automatically enables access logging for newly created ALB resources to collect logs for ALB resources. This does not affect ALB resources already collecting logs.<br/>            Existing - Automatically enables access logging for existing ALB resources to collect logs for ALB resources.<br/>            Both - Automatically enables access logging for new and existing ALB resources.<br/>            None - Skips Automatic access Logging enable for ALB resources. | `string` | `"Both"` | no |
 | <a name="input_auto_enable_classic_lb_access_logs"></a> [auto\_enable\_classic\_lb\_access\_logs](#input\_auto\_enable\_classic\_lb\_access\_logs) | Enable Classic Load Balancer (CLB) Access logging.<br/>            You have the following options:<br/>            New - Automatically enables access logging for newly created CLB resources to collect logs for CLB resources. This does not affect CLB resources already collecting logs.<br/>            Existing - Automatically enables access logging for existing CLB resources to collect logs for CLB resources.<br/>            Both - Automatically enables access logging for new and existing CLB resources.<br/>            None - Skips Automatic access Logging enable for CLB resources. | `string` | `"Both"` | no |
 | <a name="input_auto_enable_logs_subscription"></a> [auto\_enable\_logs\_subscription](#input\_auto\_enable\_logs\_subscription) | Subscribe log groups to Sumo Logic Lambda Forwarder.<br/>            You have the following options:<br/>            New - Automatically subscribes new log groups to send logs to Sumo Logic.<br/>            Existing - Automatically subscribes existing log groups to send logs to Sumo Logic.<br/>            Both - Automatically subscribes new and existing log groups.<br/>            None - Skips Automatic subscription. | `string` | `"Both"` | no |
@@ -105,7 +105,7 @@
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_aws_cloudtrail"></a> [aws\_cloudtrail](#output\_aws\_cloudtrail) | AWS Trail created to send CloudTrail logs to AWS S3 bucket. |
 | <a name="output_aws_cloudwatch_metric_stream"></a> [aws\_cloudwatch\_metric\_stream](#output\_aws\_cloudwatch\_metric\_stream) | CloudWatch metrics stream to send metrics. |
 | <a name="output_aws_iam_role"></a> [aws\_iam\_role](#output\_aws\_iam\_role) | Sumo Logic AWS IAM Role for trust relationship. |

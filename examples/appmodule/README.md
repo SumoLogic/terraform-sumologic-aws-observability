@@ -1,7 +1,7 @@
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.16.2, < 7.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.1.0 |
@@ -11,20 +11,20 @@
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="provider_sumologic"></a> [sumologic](#provider\_sumologic) | >= 3.3.0, < 4.0.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | >= 0.11.1 |
 
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_sumo-module"></a> [sumo-module](#module\_sumo-module) | ../../modules/apps | n/a |
 
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [sumologic_field.account](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.accountid](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
 | [sumologic_field.apiid](https://registry.terraform.io/providers/SumoLogic/sumologic/latest/docs/resources/field) | resource |
@@ -66,7 +66,7 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_sumo_api_endpoint"></a> [sumo\_api\_endpoint](#input\_sumo\_api\_endpoint) | Sumo Logic API endpoint URL. E.g. https://api.us2.sumologic.com/api/ | `string` | `""` | no |
 | <a name="input_sumologic_access_id"></a> [sumologic\_access\_id](#input\_sumologic\_access\_id) | Sumo Logic Access ID. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
 | <a name="input_sumologic_access_key"></a> [sumologic\_access\_key](#input\_sumologic\_access\_key) | Sumo Logic Access Key. Visit https://help.sumologic.com/Manage/Security/Access-Keys#Create_an_access_key | `string` | n/a | yes |
@@ -75,7 +75,7 @@
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_hierarchy_id"></a> [hierarchy\_id](#output\_hierarchy\_id) | ID of the AWS Observability Entity Inspector hierarchy. |
 | <a name="output_installed_apps"></a> [installed\_apps](#output\_installed\_apps) | Map of apps installed into the Sumo Logic Installed Apps catalog. |
 | <a name="output_sumologic_field_account"></a> [sumologic\_field\_account](#output\_sumologic\_field\_account) | Sumo Logic Account field ID. |
