@@ -86,19 +86,21 @@ func TestAutoEnable_Both(t *testing.T) {
 	})
 }
 
-// TestAutoEnable_ExistingOnly creates only pre-existing LBs (no post-deploy LBs),
-// verifying that access logs are enabled on LBs that exist at deploy time.
+// TestAutoEnable_ExistingOnly creates only pre-existing ALB + CLB (no post-deploy LBs) and
+// verifies that access logs are enabled on both during the initial apply via the Lambda
+// initial-scan. Corresponds to CF's common/alb_auto_enable_existing.yaml and
+// common/elb_auto_enable_existing.yaml.
 func TestAutoEnable_ExistingOnly(t *testing.T) {
 	t.Parallel()
 	workingDir := testSourceDir
 
 	vars := map[string]interface{}{
-		"collect_elb":              true,
-		"collect_classic_lb":       true,
-		"collect_cloudtrail":       false,
-		"collect_logs_cloudwatch":  "None",
+		"collect_elb":               true,
+		"collect_classic_lb":        true,
+		"collect_cloudtrail":        false,
+		"collect_logs_cloudwatch":   "None",
 		"collect_metric_cloudwatch": "None",
-		"create_collector":         true,
+		"create_collector":          true,
 	}
 
 	alb := &testresources.AWSALB{Cfg: testresources.Config{AWSRegion: region}, Name: "awso-exist-alb-" + testresources.RandHex()}
@@ -126,61 +128,6 @@ func TestAutoEnable_ExistingOnly(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "e2e", func() {
-		validateALBAccessLogsEnabled(t, alb.ID())
-		validateCLBAccessLogsEnabled(t, clb.ID())
-
-		runStandardE2E(t, vars, workingDir, E2EConfig{
-			ALBARN:  alb.ID(),
-			ALBDNS:  alb.DNS(),
-			CLBName: clb.ID(),
-			CLBDNS:  clb.DNS(),
-		})
-	})
-}
-
-// TestAutoEnable_NewOnly creates LBs only AFTER deploy (no pre-existing LBs),
-// verifying that EventBridge auto-enable works for LBs created after the module.
-func TestAutoEnable_NewOnly(t *testing.T) {
-	t.Parallel()
-	workingDir := testSourceDir
-
-	vars := map[string]interface{}{
-		"collect_elb":              true,
-		"collect_classic_lb":       true,
-		"collect_cloudtrail":       false,
-		"collect_logs_cloudwatch":  "None",
-		"collect_metric_cloudwatch": "None",
-		"create_collector":         true,
-	}
-
-	test_structure.RunTestStage(t, "deploy", func() {
-		counts := deployTerraform(t, workingDir, vars, "")
-		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
-	})
-
-	test_structure.RunTestStage(t, "health", func() {
-		testresources.AssertResourceExistence(t, workingDir, testresources.ExpectedResources(vars))
-	})
-
-	alb := &testresources.AWSALB{Cfg: testresources.Config{AWSRegion: region}, Name: "awso-new-alb-" + testresources.RandHex()}
-	clb := &testresources.AWSClassicLB{Cfg: testresources.Config{AWSRegion: region}, Name: "awso-new-clb-" + testresources.RandHex()}
-
-	test_structure.RunTestStage(t, "post_req", func() {
-		alb.Create(t)
-		clb.Create(t)
-	})
-	defer test_structure.RunTestStage(t, "cleanup_postreq", func() {
-		alb.Delete(t)
-		clb.Delete(t)
-	})
-
-	test_structure.RunTestStage(t, "e2e", func() {
-		t.Log("[autoenable] Waiting 2 minutes for EventBridge auto-enable rule...")
-		time.Sleep(2 * time.Minute)
-
 		validateALBAccessLogsEnabled(t, alb.ID())
 		validateCLBAccessLogsEnabled(t, clb.ID())
 

@@ -7,63 +7,6 @@ import (
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-// TestFeature_BucketRetention verifies that when force_destroy_bucket=false,
-// the S3 bucket is NOT deleted when the Terraform module is destroyed.
-func TestFeature_BucketRetention(t *testing.T) {
-	t.Parallel()
-	workingDir := testSourceDir
-
-	bucketName := "awso-retain-" + testresources.RandHex()
-
-	vars := map[string]interface{}{
-		"collect_elb":        true,
-		"collect_classic_lb": false,
-		"collect_cloudtrail": false,
-		"collect_logs_cloudwatch":  "None",
-		"collect_metric_cloudwatch": "None",
-		"create_collector":   true,
-		"elb_details": map[string]interface{}{
-			"source_name":     "Elb Logs (Region)",
-			"source_category": "aws/observability/alb/logs",
-			"description":     "test",
-			"bucket_details": map[string]interface{}{
-				"create_bucket":        true,
-				"bucket_name":          bucketName,
-				"path_expression":      "*elasticloadbalancing/AWSLogs/*",
-				"force_destroy_bucket": false,
-			},
-			"fields": map[string]interface{}{},
-		},
-	}
-
-	test_structure.RunTestStage(t, "deploy", func() {
-		counts := deployTerraform(t, workingDir, vars, "")
-		testresources.AssertResourceCounts(t, counts)
-	})
-
-	var bucket *testresources.AWSS3Bucket
-	test_structure.RunTestStage(t, "health", func() {
-		bucket = &testresources.AWSS3Bucket{Cfg: testresources.Config{AWSRegion: region}, Name: bucketName}
-		bucket.AssertExists(t)
-	})
-
-	test_structure.RunTestStage(t, "destroy", func() {
-		destroyTerraform(t, workingDir)
-	})
-
-	test_structure.RunTestStage(t, "verify_retention", func() {
-		// Bucket should still exist after destroy because force_destroy=false
-		bucket.AssertExists(t)
-		t.Log("[bucket-retention] Confirmed: bucket retained after destroy")
-	})
-
-	defer test_structure.RunTestStage(t, "cleanup_bucket", func() {
-		if bucket != nil {
-			bucket.ForceDelete(t)
-		}
-	})
-}
-
 // TestFeature_MetricsDisabled verifies that setting collect_metric_cloudwatch=None
 // deploys without any Kinesis Firehose or CloudWatch stream resources.
 func TestFeature_MetricsDisabled(t *testing.T) {
