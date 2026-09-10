@@ -396,6 +396,98 @@ func TestBucket_SharedMixedForceDestroy(t *testing.T) {
 	})
 }
 
+// TestBucket_AllExistingSingleShared (IT8) pre-creates ONE bucket and deploys CT + ALB + CLB
+// all pointing to that same existing bucket. The Lambda path runs three independent policy-update
+// invocations against the same bucket, and the test verifies all three service principals land
+// in the final shared bucket policy — proving the append logic handles simultaneous writes to
+// an existing bucket from multiple source types without any principal overwriting another.
+// Distinct from TestBucket_SharedPolicyMerge (which creates a new shared bucket) and
+// TestBucket_AllExisting (which uses three separate pre-existing buckets).
+// Corresponds to CF's common/all_same_existing_bucket.yaml.
+func TestBucket_AllExistingSingleShared(t *testing.T) {
+	t.Parallel()
+	workingDir := testSourceDir
+
+	sharedBucketName := "awso-it8-" + testresources.RandHex()
+	sharedBucket := &testresources.AWSS3Bucket{Cfg: awsCfg(), Name: sharedBucketName}
+
+	test_structure.RunTestStage(t, "pre_req", func() {
+		sharedBucket.Create(t)
+	})
+	defer test_structure.RunTestStage(t, "cleanup_prereq", func() {
+		sharedBucket.Delete(t)
+	})
+
+	vars := map[string]interface{}{
+		"collect_elb":               true,
+		"collect_classic_lb":        true,
+		"collect_cloudtrail":        true,
+		"collect_logs_cloudwatch":   "None",
+		"collect_metric_cloudwatch": "None",
+		"create_collector":          true,
+		"cloudtrail_details": map[string]interface{}{
+			"source_name":     "CloudTrail Logs (Region)",
+			"source_category": "aws/observability/cloudtrail/logs",
+			"description":     "IT8: one pre-existing shared bucket",
+			"bucket_details": map[string]interface{}{
+				"create_bucket":        false,
+				"create_trail":         false,
+				"bucket_name":          sharedBucketName,
+				"path_expression":      "AWSLogs/*/CloudTrail/*",
+				"force_destroy_bucket": false,
+			},
+			"fields": map[string]interface{}{},
+		},
+		"elb_details": map[string]interface{}{
+			"source_name":     "Elb Logs (Region)",
+			"source_category": "aws/observability/alb/logs",
+			"description":     "IT8: same pre-existing shared bucket",
+			"bucket_details": map[string]interface{}{
+				"create_bucket":        false,
+				"bucket_name":          sharedBucketName,
+				"path_expression":      "*elasticloadbalancing/AWSLogs/*",
+				"force_destroy_bucket": false,
+			},
+			"fields": map[string]interface{}{},
+		},
+		"classic_lb_details": map[string]interface{}{
+			"source_name":     "Classic lb Logs (Region)",
+			"source_category": "aws/observability/clb/logs",
+			"description":     "IT8: same pre-existing shared bucket",
+			"bucket_details": map[string]interface{}{
+				"create_bucket":        false,
+				"bucket_name":          sharedBucketName,
+				"path_expression":      "*classicloadbalancing/AWSLogs/*",
+				"force_destroy_bucket": false,
+			},
+			"fields": map[string]interface{}{},
+		},
+	}
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		counts := deployTerraform(t, workingDir, vars, "")
+		testresources.AssertResourceCounts(t, counts)
+	})
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
+
+	test_structure.RunTestStage(t, "health", func() {
+		opts := test_structure.LoadTerraformOptions(t, workingDir)
+		roleName := terraform.Output(t, opts, "aws_iam_role")
+
+		// All three service principals must be merged into the single existing bucket policy
+		assertBucketPolicyContains(t, sharedBucketName, "cloudtrail.amazonaws.com")
+		assertBucketPolicyContains(t, sharedBucketName, "delivery.logs.amazonaws.com")
+		assertBucketPolicyContains(t, sharedBucketName, "logdelivery.elasticloadbalancing.amazonaws.com")
+
+		// One shared bucket must still have S3 → SNS notification wired
+		assertBucketHasSNSNotification(t, sharedBucketName)
+
+		assertIAMRoleExists(t, roleName)
+	})
+}
+
 // TestBucket_AllExisting (IT7) pre-creates three separate buckets — one per source — and
 // deploys with all three sources pointing to their respective pre-existing buckets. Every
 // bucket policy update goes through the Lambda path. The test checks each bucket independently

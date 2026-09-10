@@ -151,6 +151,42 @@ func TestBasic_LambdaForwarderTagFilter(t *testing.T) {
 	})
 }
 
+// TestBasic_AllSourcesNoApps deploys CloudTrail + KF Logs + KF Metrics with no app module
+// deployed alongside. Verifies that the source module is fully self-contained and data flows
+// to Sumo Logic even without the FERs that the app module installs.
+// Corresponds to CF's kf/kinesis_firehose_all_sources_no_apps.yaml.
+func TestBasic_AllSourcesNoApps(t *testing.T) {
+	t.Parallel()
+	workingDir := testSourceDir
+
+	vars := map[string]interface{}{
+		"collect_elb":               false,
+		"collect_classic_lb":        false,
+		"collect_cloudtrail":        true,
+		"collect_logs_cloudwatch":   "Kinesis Firehose Log Source",
+		"collect_metric_cloudwatch": "Kinesis Firehose Metrics Source",
+		"create_collector":          true,
+	}
+
+	test_structure.RunTestStage(t, "deploy", func() {
+		counts := deployTerraform(t, workingDir, vars, "")
+		testresources.AssertResourceCounts(t, counts)
+	})
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
+
+	test_structure.RunTestStage(t, "health", func() {
+		testresources.AssertResourceExistence(t, workingDir, testresources.ExpectedResources(vars))
+	})
+
+	test_structure.RunTestStage(t, "e2e", func() {
+		// No LB traffic; E2E covers CloudTrail + CW logs + KF metrics paths only.
+		// Absence of app-module FERs must not prevent data delivery.
+		runStandardE2E(t, vars, workingDir, E2EConfig{})
+	})
+}
+
 // TestBasic_KinesisWithTagFilter deploys KF Logs with a metrics tag filter,
 // validating that the tag filter config doesn't break the deployment.
 func TestBasic_KinesisWithTagFilter(t *testing.T) {
