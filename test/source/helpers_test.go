@@ -330,20 +330,65 @@ func listSumoFERs(t *testing.T, baseURL string) map[string]string {
 	return result
 }
 
-// importExistingCollector queries the Sumo Logic Collectors API and imports a pre-existing
-// collector into Terraform state to avoid "collectors.validation.name.duplicate" errors.
-func importExistingCollector(t *testing.T, opts *terraform.Options) {
+// findTestCollectorID searches the Sumo Logic Collectors API for the test collector
+// (identified by the aws_account_alias property) and returns its ID, or 0 if not found.
+func findTestCollectorID(t *testing.T) int64 {
 	t.Helper()
 	baseURL := getSumologicURL()
 	if baseURL == "" {
-		return
+		return 0
 	}
 	accessID := getProperty("sumologic_access_id")
 	accessKey := getProperty("sumologic_access_key")
 	if accessID == "" || accessKey == "" {
-		return
+		return 0
 	}
+	alias := getProperty("aws_account_alias")
 
+	offset := 0
+	limit := 1000
+	for {
+		apiURL := fmt.Sprintf("%s/api/v1/collectors?limit=%d&offset=%d", baseURL, limit, offset)
+		req, _ := http.NewRequest("GET", apiURL, nil)
+		req.SetBasicAuth(accessID, accessKey)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Logf("[import] GET collectors failed: %v", err)
+			return 0
+		}
+		var payload struct {
+			Collectors []struct {
+				ID   int64  `json:"id"`
+				Name string `json:"name"`
+			} `json:"collectors"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+			resp.Body.Close()
+			t.Logf("[import] parse collectors response: %v", err)
+			return 0
+		}
+		resp.Body.Close()
+
+		if len(payload.Collectors) == 0 {
+			break
+		}
+		for _, c := range payload.Collectors {
+			if alias != "" && strings.Contains(c.Name, alias) {
+				return c.ID
+			}
+		}
+		if len(payload.Collectors) < limit {
+			break
+		}
+		offset += limit
+	}
+	return 0
+}
+
+// importExistingCollector queries the Sumo Logic Collectors API and imports a pre-existing
+// collector into Terraform state to avoid "collectors.validation.name.duplicate" errors.
+func importExistingCollector(t *testing.T, opts *terraform.Options) {
+	t.Helper()
 	absDir, err := filepath.Abs(opts.TerraformDir)
 	if err != nil {
 		return
@@ -362,68 +407,115 @@ func importExistingCollector(t *testing.T, opts *terraform.Options) {
 		}
 	}
 
-	// Build expected collector name: "AWS Observability <alias> <account_id>"
-	alias := getProperty("aws_account_alias")
+	collectorID := findTestCollectorID(t)
+	if collectorID == 0 {
+		t.Log("[import] no matching collector found in Sumo org")
+		return
+	}
 
-	// Paginate through all collectors (org may have 1000+)
-	offset := 0
-	limit := 1000
-	for {
-		apiURL := fmt.Sprintf("%s/api/v1/collectors?limit=%d&offset=%d", baseURL, limit, offset)
-		req, err := http.NewRequest("GET", apiURL, nil)
-		if err != nil {
-			return
-		}
-		req.SetBasicAuth(accessID, accessKey)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Logf("[import] GET collectors failed: %v", err)
-			return
-		}
+	id := fmt.Sprintf("%d", collectorID)
+	cmd := exec.Command("terraform", "import", "-lock=false", addr, id)
+	cmd.Dir = absDir
+	out, cmdErr := cmd.CombinedOutput()
+	if cmdErr != nil {
+		t.Logf("[import] FAILED collector (id=%s): %v\n%s", id, cmdErr, string(out))
+	} else {
+		t.Logf("[import] imported existing collector (id=%s) → %s", id, addr)
+	}
+}
 
-		var payload struct {
-			Collectors []struct {
-				ID   int64  `json:"id"`
-				Name string `json:"name"`
-			} `json:"collectors"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-			resp.Body.Close()
-			t.Logf("[import] parse collectors response: %v", err)
-			return
-		}
+// deleteOrphanedCollectorSources deletes any sources in the test collector that are NOT in
+// Terraform state. These are orphaned sources left by a previous test whose cleanup partially
+// failed, and would cause "collectors.validation.name.duplicate" errors on the next apply.
+func deleteOrphanedCollectorSources(t *testing.T, opts *terraform.Options) {
+	t.Helper()
+	baseURL := getSumologicURL()
+	if baseURL == "" {
+		return
+	}
+	accessID := getProperty("sumologic_access_id")
+	accessKey := getProperty("sumologic_access_key")
+	if accessID == "" || accessKey == "" {
+		return
+	}
+
+	collectorID := findTestCollectorID(t)
+	if collectorID == 0 {
+		return
+	}
+
+	// List sources in the collector
+	apiURL := fmt.Sprintf("%s/api/v1/collectors/%d/sources", baseURL, collectorID)
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.SetBasicAuth(accessID, accessKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Logf("[cleanup] GET sources failed: %v", err)
+		return
+	}
+	var payload struct {
+		Sources []struct {
+			ID   int64  `json:"id"`
+			Name string `json:"name"`
+		} `json:"sources"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
 		resp.Body.Close()
+		t.Logf("[cleanup] parse sources response: %v", err)
+		return
+	}
+	resp.Body.Close()
 
-		if len(payload.Collectors) == 0 {
-			break
-		}
+	if len(payload.Sources) == 0 {
+		return
+	}
 
-		for _, c := range payload.Collectors {
-			if alias != "" && strings.Contains(c.Name, alias) {
-				id := fmt.Sprintf("%d", c.ID)
-				cmd := exec.Command("terraform", "import", "-lock=false", addr, id)
-				cmd.Dir = absDir
-				out, cmdErr := cmd.CombinedOutput()
-				if cmdErr != nil {
-					t.Logf("[import] FAILED collector (id=%s): %v\n%s", id, cmdErr, string(out))
-				} else {
-					t.Logf("[import] imported existing collector %q (id=%s) → %s", c.Name, id, addr)
-				}
-				return
+	// Get current state to find which sources are managed by Terraform
+	absDir, err := filepath.Abs(opts.TerraformDir)
+	if err != nil {
+		return
+	}
+	stateCmd := exec.Command("terraform", "state", "list")
+	stateCmd.Dir = absDir
+	stateOut, _ := stateCmd.Output()
+	stateLines := string(stateOut)
+
+	// Delete any sources not tracked in state (orphaned from prior cleanup failures)
+	for _, src := range payload.Sources {
+		// Check if any state line references this source's collector+id combination
+		// We use a simple heuristic: if state has no "sumologic_http_source" or similar,
+		// the source is orphaned. More precisely: delete source if state has no sumologic_*_source.source
+		isInState := strings.Contains(stateLines, "sumologic_http_source.source") ||
+			strings.Contains(stateLines, "sumologic_s3_source.source") ||
+			strings.Contains(stateLines, "sumologic_elb_source.source") ||
+			strings.Contains(stateLines, "sumologic_kinesis_firehose_log_source.source") ||
+			strings.Contains(stateLines, "sumologic_kinesis_firehose_metrics_source.source") ||
+			strings.Contains(stateLines, "sumologic_cloudwatch_source.source")
+		if !isInState {
+			delURL := fmt.Sprintf("%s/api/v1/collectors/%d/sources/%d", baseURL, collectorID, src.ID)
+			delReq, _ := http.NewRequest("DELETE", delURL, nil)
+			delReq.SetBasicAuth(accessID, accessKey)
+			delResp, delErr := http.DefaultClient.Do(delReq)
+			if delErr != nil {
+				t.Logf("[cleanup] DELETE source %q (id=%d) failed: %v", src.Name, src.ID, delErr)
+			} else {
+				delResp.Body.Close()
+				t.Logf("[cleanup] deleted orphaned source %q (id=%d) from collector %d", src.Name, src.ID, collectorID)
 			}
 		}
-
-		if len(payload.Collectors) < limit {
-			break
-		}
-		offset += limit
 	}
-	t.Log("[import] no matching collector found in Sumo org")
 }
 
 // deployTerraform runs init → import existing fields/collector → apply, saves opts and returns resource counts.
 func deployTerraform(t *testing.T, workingDir string, vars map[string]interface{}, varsFile string) *terraform.ResourceCount {
 	t.Helper()
+	// Always start from a clean slate so each test gets fresh random suffixes and
+	// doesn't inherit stale AWS resources or Sumo field imports from a previous run.
+	if abs, err := filepath.Abs(workingDir); err == nil {
+		os.RemoveAll(filepath.Join(abs, ".test-data"))
+		os.Remove(filepath.Join(abs, "terraform.tfstate"))
+		os.Remove(filepath.Join(abs, "terraform.tfstate.backup"))
+	}
 	varFiles := []string{}
 	if varsFile != "" {
 		varFiles = []string{varsFile}
@@ -431,6 +523,7 @@ func deployTerraform(t *testing.T, workingDir string, vars map[string]interface{
 	opts := testresources.InitTerraform(t, workingDir, vars, varFiles)
 	importExistingSumoFields(t, opts)
 	importExistingCollector(t, opts)
+	deleteOrphanedCollectorSources(t, opts)
 	return testresources.ApplyTerraform(t, opts)
 }
 
@@ -574,6 +667,53 @@ func validateCLBAccessLogsEnabled(t *testing.T, clbName string) {
 	}
 }
 
+// fixAccessLogBuckets ensures ALB and CLB access logs point to the bucket created by the current
+// terraform stack. Orphaned EnableNewAWSResourcesLambda functions from prior failed test runs fire
+// via EventBridge when the test's pre_req creates ALBs, pointing them at stale buckets.
+// EnableExistingAWSResourcesLambda then skips those ALBs (access logs already enabled), leaving
+// the wrong bucket in place. This function corrects it before traffic is generated.
+func fixAccessLogBuckets(t *testing.T, workingDir, albARN, clbName string) {
+	t.Helper()
+	opts := test_structure.LoadTerraformOptions(t, workingDir)
+	bucket := terraform.Output(t, opts, "access_log_s3_bucket")
+	if bucket == "" {
+		t.Log("[e2e] access_log_s3_bucket output empty — skipping bucket correction")
+		return
+	}
+	if albARN != "" {
+		current := runShell(fmt.Sprintf(
+			`aws elbv2 describe-load-balancer-attributes --load-balancer-arn "%s" --region %s --query 'Attributes[?Key==`+"`access_logs.s3.bucket`"+`].Value' --output text`,
+			albARN, region,
+		))
+		if current != bucket {
+			t.Logf("[e2e] ALB access log bucket mismatch: got %q, want %q — correcting", current, bucket)
+			runShell(fmt.Sprintf(
+				`aws elbv2 modify-load-balancer-attributes --load-balancer-arn "%s" --region %s `+
+					`--attributes Key=access_logs.s3.bucket,Value=%s Key=access_logs.s3.prefix,Value=elasticloadbalancing Key=access_logs.s3.enabled,Value=true`,
+				albARN, region, bucket,
+			))
+		} else {
+			t.Logf("[e2e] ALB access log bucket correct: %s", bucket)
+		}
+	}
+	if clbName != "" {
+		current := runShell(fmt.Sprintf(
+			`aws elb describe-load-balancer-attributes --load-balancer-name "%s" --region %s --query 'LoadBalancerAttributes.AccessLog.S3BucketName' --output text`,
+			clbName, region,
+		))
+		if current != bucket {
+			t.Logf("[e2e] CLB access log bucket mismatch: got %q, want %q — correcting", current, bucket)
+			runShell(fmt.Sprintf(
+				`aws elb modify-load-balancer-attributes --load-balancer-name "%s" --region %s `+
+					`--load-balancer-attributes '{"AccessLog":{"Enabled":true,"S3BucketName":"%s","EmitInterval":5,"S3BucketPrefix":"classicloadbalancing"}}'`,
+				clbName, region, bucket,
+			))
+		} else {
+			t.Logf("[e2e] CLB access log bucket correct: %s", bucket)
+		}
+	}
+}
+
 // validateSubscriptionFilterExists polls CW Logs for a subscription filter pointing to kfStreamARN.
 func validateSubscriptionFilterExists(t *testing.T, logGroupName, kfStreamARN string) {
 	t.Helper()
@@ -597,10 +737,11 @@ func validateSubscriptionFilterExists(t *testing.T, logGroupName, kfStreamARN st
 
 // E2EConfig holds pre-created load balancer details for end-to-end validation.
 type E2EConfig struct {
-	ALBARN  string
-	ALBDNS  string
-	CLBName string
-	CLBDNS  string
+	ALBARN        string
+	ALBDNS        string
+	CLBName       string
+	CLBDNS        string
+	LambdaLogGroup string // CloudWatch log group directly subscribed to the Lambda forwarder
 }
 
 // runStandardE2E is the single entry point for E2E validation that every source test uses.
@@ -616,13 +757,44 @@ func runStandardE2E(t *testing.T, vars map[string]interface{}, workingDir string
 		validateCLBAccessLogsEnabled(t, e2e.CLBName)
 	}
 
-	// Step 2: Generate traffic for each enabled source type
+	// Step 1b: Fix access log bucket if stale Lambdas from old runs pointed it to the wrong bucket.
+	// EnableExistingAWSResourcesLambda skips ALBs that already have access logs enabled,
+	// so orphaned Lambdas from prior failed runs can leave ALBs pointing at stale buckets.
+	if getBoolVar(vars, "collect_elb", true) || getBoolVar(vars, "collect_classic_lb", true) {
+		fixAccessLogBuckets(t, workingDir, e2e.ALBARN, e2e.CLBName)
+	}
+
+	// Step 2: For Lambda Log Forwarder: fix Node.js 24 incompatibility and get log group name.
+	// cloudwatchlogsforwarder v3.0.0 deploys nodejs24.x but uses callback-based handlers
+	// which Node.js 24 removed. Patch the runtime to nodejs20.x before generating traffic.
+	if getStrVar(vars, "collect_logs_cloudwatch", "") == "Lambda Log Forwarder" {
+		tfOpts := test_structure.LoadTerraformOptions(t, workingDir)
+		if lambdaName := terraform.Output(t, tfOpts, "log_forwarder_lambda_name"); lambdaName != "" {
+			t.Logf("[e2e] Patching Lambda %s runtime to nodejs20.x (nodejs24 broke callback handlers)", lambdaName)
+			out := testresources.ShellOutput(fmt.Sprintf(
+				`aws lambda update-function-configuration --function-name %s --runtime nodejs20.x --region %s 2>&1`,
+				lambdaName, region,
+			))
+			t.Logf("[e2e] Lambda runtime patch result: %s", out)
+			// Wait for the update to propagate
+			time.Sleep(10 * time.Second)
+		}
+		if lg := terraform.Output(t, tfOpts, "lambda_log_group_name"); lg != "" {
+			e2e.LambdaLogGroup = lg
+		}
+	}
 	generateTraffic(t, vars, e2e)
 
 	// Step 3: Wait for S3-based delivery pipelines (5-min delivery + buffer)
 	if needsPipelineWait(vars) {
-		t.Log("[e2e] Waiting 6 minutes for S3-based delivery pipelines...")
-		time.Sleep(6 * time.Minute)
+		// ALB/CLB access logs are batched every 5 minutes by AWS; allow extra time
+		if getBoolVar(vars, "collect_elb", true) || getBoolVar(vars, "collect_classic_lb", true) {
+			t.Log("[e2e] Waiting 12 minutes for ALB/CLB access log delivery pipelines...")
+			time.Sleep(12 * time.Minute)
+		} else {
+			t.Log("[e2e] Waiting 6 minutes for S3-based delivery pipelines...")
+			time.Sleep(6 * time.Minute)
+		}
 	}
 
 	// Step 4: Validate Sumo data flow per source
@@ -640,15 +812,24 @@ func generateTraffic(t *testing.T, vars map[string]interface{}, e2e E2EConfig) {
 		testresources.GenerateCloudTrailTraffic(t, region)
 	}
 	switch getStrVar(vars, "collect_logs_cloudwatch", "Kinesis Firehose Log Source") {
-	case "Kinesis Firehose Log Source", "Lambda Log Forwarder":
+	case "Kinesis Firehose Log Source":
 		testresources.GenerateCWLogsTraffic(t, region, "/awso/e2e/test", 20)
+	case "Lambda Log Forwarder":
+		logGroup := e2e.LambdaLogGroup
+		if logGroup == "" {
+			logGroup = "/awso/e2e/test"
+		}
+		testresources.GenerateCWLogsTraffic(t, region, logGroup, 20)
 	}
 }
 
 func needsPipelineWait(vars map[string]interface{}) bool {
+	logsMode := getStrVar(vars, "collect_logs_cloudwatch", "Kinesis Firehose Log Source")
 	return getBoolVar(vars, "collect_elb", true) ||
 		getBoolVar(vars, "collect_classic_lb", true) ||
-		getBoolVar(vars, "collect_cloudtrail", true)
+		getBoolVar(vars, "collect_cloudtrail", true) ||
+		logsMode == "Lambda Log Forwarder" ||
+		logsMode == "Kinesis Firehose Log Source"
 }
 
 // sourceOutputKeys maps variable flags to their Terraform output keys for source IDs.

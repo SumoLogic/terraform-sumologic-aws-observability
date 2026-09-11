@@ -3,6 +3,7 @@ package testresources
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
@@ -75,15 +76,16 @@ func GenerateCWLogsTraffic(t *testing.T, region, logGroupName string, eventCount
 		logGroupName, region,
 	))
 
-	events := ""
+	var parts []string
 	for i := 0; i < eventCount; i++ {
 		ts := time.Now().UnixMilli()
-		events += fmt.Sprintf(`{"timestamp":%d,"message":"awso-e2e-test-event-%d"} `, ts, i)
+		parts = append(parts, fmt.Sprintf(`{"timestamp":%d,"message":"awso-e2e-test-event-%d"}`, ts, i))
 		time.Sleep(10 * time.Millisecond)
 	}
+	events := "[" + strings.Join(parts, ",") + "]"
 
 	shellOutput(fmt.Sprintf(
-		`aws logs put-log-events --log-group-name "%s" --log-stream-name "e2e-stream" --log-events %s --region %s`,
+		`aws logs put-log-events --log-group-name "%s" --log-stream-name "e2e-stream" --log-events '%s' --region %s`,
 		logGroupName, events, region,
 	))
 	t.Logf("[e2e-traffic] CW Logs %s: put %d events in %s", logGroupName, eventCount, region)
