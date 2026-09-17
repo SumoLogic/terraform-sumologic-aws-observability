@@ -5,21 +5,23 @@ import (
 	"testing"
 )
 
-// SumoSource creates/deletes a Sumo Logic S3 source on an existing collector.
+// SumoSource creates/deletes a Sumo Logic HTTP source on an existing collector.
 // Used to pre-create a source whose URL can be passed as *_log_source_url variable.
 type SumoSource struct {
 	Cfg         Config
 	CollectorID string
 	Name        string
 	Category    string
-	BucketName  string
+	BucketName  string // unused; kept for API compatibility
+	RoleARN     string // unused; kept for API compatibility
 	id          string
 }
 
 func (s *SumoSource) Create(t *testing.T) string {
+	t.Helper()
 	payload := fmt.Sprintf(
-		`{"source":{"sourceType":"Polling","contentType":"AwsS3Bucket","name":"%s","category":"%s","thirdPartyRef":{"resources":[{"serviceType":"AwsS3Bucket","path":{"type":"S3BucketPathExpression","bucketName":"%s","pathExpression":"*"},"authentication":{"type":"AWSRoleBasedAuthentication","roleARN":"arn:aws:iam::000000000000:role/placeholder"}}]}}}`,
-		s.Name, s.Category, s.BucketName,
+		`{"source":{"sourceType":"HTTP","name":"%s","category":"%s","messagePerRequest":false,"multilineProcessingEnabled":false}}`,
+		s.Name, s.Category,
 	)
 	id := shellOutput(fmt.Sprintf(
 		`curl -s -u %s -X POST -H "Content-Type: application/json" -d '%s' "%s/api/v1/collectors/%s/sources" | jq -r '.source.id // empty'`,
@@ -34,14 +36,14 @@ func (s *SumoSource) Create(t *testing.T) string {
 }
 
 func (s *SumoSource) Delete(t *testing.T) {
-	if s.id == "" {
-		return
+	t.Helper()
+	if s.id != "" {
+		shellOutput(fmt.Sprintf(
+			`curl -sf -u %s -X DELETE "%s/api/v1/collectors/%s/sources/%s"`,
+			s.Cfg.sumoCreds(), s.Cfg.SumoBaseURL, s.CollectorID, s.id,
+		))
+		t.Logf("[testresources] Deleted Sumo source id=%s", s.id)
 	}
-	shellOutput(fmt.Sprintf(
-		`curl -sf -u %s -X DELETE "%s/api/v1/collectors/%s/sources/%s"`,
-		s.Cfg.sumoCreds(), s.Cfg.SumoBaseURL, s.CollectorID, s.id,
-	))
-	t.Logf("[testresources] Deleted Sumo source id=%s", s.id)
 }
 
 func (s *SumoSource) ID() string { return s.id }

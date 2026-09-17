@@ -15,6 +15,8 @@ type Config struct {
 	SumoBaseURL   string // e.g. "https://api.us2.sumologic.com"
 	SumoAccessID  string
 	SumoAccessKey string
+	SumoOrgID     string // e.g. "00000000009D01A1" — used for IAM role trust ExternalId
+	SumoEnv       string // e.g. "us2"
 	AWSRegion     string // defaults to "us-east-1"
 }
 

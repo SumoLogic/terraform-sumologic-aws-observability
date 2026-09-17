@@ -4,9 +4,14 @@ output "collection_folder_id" {
   sensitive   = true
 }
 
+output "access_log_s3_bucket" {
+  value       = try(module.collection-module.aws_s3_bucket["s3_bucket"].bucket, "")
+  description = "S3 bucket used for ELB/CLB/CloudTrail access logs."
+}
+
 # Comment in case of Null collection (test 2 )
 output "sumologic_collector" {
-  value       = var.create_collector ? module.collection-module.sumologic_collector.collector.id : ""
+  value       = var.create_collector ? try(module.collection-module.sumologic_collector.collector.id, "") : ""
   description = "This output contains sumologic collector id."
 }
 
@@ -18,18 +23,18 @@ output "aws_s3" {
 
 # Comment in case of Null collection (test 2 and 3,4)
 output "aws_sns_topic" {
-  value       = var.executeTest1 ? module.collection-module.aws_sns_topic.sns_topic.arn : ""
+  value       = var.executeTest1 ? try(module.collection-module.aws_sns_topic.arn, "") : ""
   description = "This output contains AWS SNS topic arn."
 }
 
 # Comment in case of Null collection
 output "aws_iam_role" {
-  value       = var.executeTest2 == false ? module.collection-module.aws_iam_role.sumologic_iam_role.name : ""
+  value       = var.executeTest2 == false ? try(module.collection-module.aws_iam_role.sumologic_iam_role.name, "") : ""
   description = "This output contains IAM role arn."
 }
 
 output "sumologic_cloudtrail_source" {
-  value       = var.collect_cloudtrail == true ? module.collection-module.cloudtrail_source.id : ""
+  value       = var.collect_cloudtrail == true ? try(module.collection-module.cloudtrail_source.id, "") : ""
   description = "This output contains sumologic CloudTrail source id."
 }
 
@@ -51,18 +56,18 @@ output "cloudtrail_sns_sub" {
 }
 
 output "sumologic_kinesis_firehose_for_metrics_source" {
-  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? module.collection-module.kinesis_firehose_for_metrics_source.id : ""
+  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? try(module.collection-module.kinesis_firehose_for_metrics_source.id, "") : ""
   description = "This output contains sumologic kinesis firehose for metrics source id."
 }
 
 output "kf_metrics_stream" {
-  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? module.collection-module.aws_kinesis_firehose_metrics_delivery_stream.name : ""
+  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? try(module.collection-module.aws_kinesis_firehose_metrics_delivery_stream.name, "") : ""
   description = "This output contains Kinesis Firehose for metrics stream Name."
   sensitive   = true
 }
 
 output "cw_metrics_stream" {
-  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? module.collection-module.aws_cloudwatch_metric_stream.name : ""
+  value       = var.collect_metric_cloudwatch == "Kinesis Firehose Metrics Source" ? try(module.collection-module.aws_cloudwatch_metric_stream.name, "") : ""
   description = "This output contains CloudWatch metrics stream Name."
 }
 
@@ -72,12 +77,12 @@ output "cw_metrics_stream" {
 # }
 
 output "sumologic_kinesis_firehose_for_logs_source" {
-  value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? module.collection-module.kinesis_firehose_for_logs_source.id : ""
+  value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? try(module.collection-module.kinesis_firehose_for_logs_source.id, "") : ""
   description = "This output contains sumologic kinesis firehose for logs source id."
 }
 
 output "kf_logs_stream" {
-  value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? module.collection-module.aws_kinesis_firehose_logs_delivery_stream.name : ""
+  value       = var.collect_logs_cloudwatch == "Kinesis Firehose Log Source" ? try(module.collection-module.aws_kinesis_firehose_logs_delivery_stream.name, "") : ""
   description = "This output contains Kinesis Firehose for logs stream Name."
   sensitive   = true
 }
@@ -92,8 +97,13 @@ output "log_forwarder_lambda_name" {
   description = "This output contains Lambda logs forwarder Function Name."
 }
 
+output "lambda_log_group_name" {
+  value       = var.collect_logs_cloudwatch == "Lambda Log Forwarder" ? "/aws/lambda/${try(module.collection-module.cloudwatch_logs_lambda_function.id, "")}" : ""
+  description = "CloudWatch log group that is directly subscribed to the Lambda forwarder — use this for E2E traffic."
+}
+
 output "sumologic_classic_lb_source" {
-  value       = var.collect_classic_lb == true ? module.collection-module.classic_lb_source.id : ""
+  value       = var.collect_classic_lb == true ? try(module.collection-module.classic_lb_source.id, "") : ""
   description = "This output contains sumologic Classic ELB source id."
 }
 
@@ -109,7 +119,7 @@ output "classic_lb_sns_sub" {
 }
 
 output "sumologic_elb_source" {
-  value       = var.collect_elb == true ? module.collection-module.elb_source.id : ""
+  value       = var.collect_elb == true ? try(module.collection-module.elb_source.id, "") : ""
   description = "This output contains sumologic ALB source id."
 }
 

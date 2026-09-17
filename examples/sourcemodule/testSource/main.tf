@@ -21,29 +21,31 @@ module "collection-module" {
   }
 
   # ALB logs
-  # elb_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/916197188"
+  elb_log_source_url = var.elb_source_url
   collect_elb_logs   = var.collect_elb
   elb_source_details = var.elb_details
 
   # CLB logs
-  # classic_lb_log_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/916197188"
+  classic_lb_log_source_url = var.classic_lb_source_url
   collect_classic_lb_logs   = var.collect_classic_lb
   classic_lb_source_details = var.classic_lb_details
 
-  # CW logs 
-  # logs_source_url = "https://api.sumologic.com/api/v1/collectors/185689129/sources/915277706"
-  collect_cloudwatch_logs = var.collect_logs_cloudwatch
+  # CW logs
+  cloudwatch_logs_source_url = var.cloudwatch_log_source_url
+  collect_cloudwatch_logs    = var.collect_logs_cloudwatch
   auto_enable_logs_subscription_options = {
     "filter" : var.auto_enable_logs_filters
     "tags_filter" : var.auto_enable_logs_tags_filters
   }
 
   # Enable Collection of Cloudtrail logs
+  cloudtrail_source_url     = var.cloudtrail_source_url
   collect_cloudtrail_logs   = var.collect_cloudtrail
   cloudtrail_source_details = var.cloudtrail_details
 
   # Collect CW metrics
-  collect_cloudwatch_metrics = var.collect_metric_cloudwatch
+  cloudwatch_metrics_source_url = var.cloudwatch_metrics_source_url
+  collect_cloudwatch_metrics    = var.collect_metric_cloudwatch
   cloudwatch_metrics_source_details = {
     "bucket_details" : {
       "bucket_name" : var.s3_name,

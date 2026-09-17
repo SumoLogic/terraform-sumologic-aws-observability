@@ -4,6 +4,11 @@
 module "collection-module" {
   source = "../../../modules/collections"
 
+  providers = {
+    aws       = aws
+    sumologic = sumologic
+  }
+
   aws_account_alias         = var.aws_account_alias
   sumologic_organization_id = var.sumologic_organization_id
   sumologic_access_id  = var.sumologic_access_id
@@ -77,6 +82,7 @@ module "collection-module" {
     description     = "This source is created using Sumo Logic terraform AWS Observability module to collect AWS cloudtrail logs."
     bucket_details = {
       create_bucket        = var.create_s3_bucket
+      create_trail         = false
       bucket_name          = var.s3_name
       path_expression      = "*AWSLog/*/CloudTrail/*/*"
       force_destroy_bucket = false

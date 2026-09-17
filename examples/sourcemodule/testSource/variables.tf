@@ -417,6 +417,31 @@ variable "executeTest6" {
   description = "True - If you want to execute this TestCase"
   default     = false
 }
+variable "elb_source_url" {
+  type        = string
+  description = "Existing ALB source URL. When non-empty, the module uses this source instead of creating a new one."
+  default     = ""
+}
+variable "classic_lb_source_url" {
+  type        = string
+  description = "Existing Classic LB source URL. When non-empty, the module uses this source instead of creating a new one."
+  default     = ""
+}
+variable "cloudtrail_source_url" {
+  type        = string
+  description = "Existing CloudTrail source URL. When non-empty, the module uses this source instead of creating a new one."
+  default     = ""
+}
+variable "cloudwatch_log_source_url" {
+  type        = string
+  description = "Existing CloudWatch logs source URL. When non-empty, the module uses this source instead of creating a new one."
+  default     = ""
+}
+variable "cloudwatch_metrics_source_url" {
+  type        = string
+  description = "Existing CloudWatch metrics source URL. When non-empty, the module uses this source instead of creating a new one."
+  default     = ""
+}
 variable "aws_resource_tags" {
   description = "Map of tags to apply to all AWS resources provisioned through the test Source Module"
   type        = map(string)

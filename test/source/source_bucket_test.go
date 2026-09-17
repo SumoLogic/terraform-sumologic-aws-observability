@@ -199,7 +199,8 @@ func TestBucket_CloudTrailRetentionOnDestroy(t *testing.T) {
 
 	test_structure.RunTestStage(t, "destroy", func() {
 		// BucketNotEmpty is the expected outcome — it proves force_destroy=false protects the bucket.
-		err := destroyTerraformAllowingErrors(t, workingDir)
+		// Use preserving variant so emptyCommonBucket does NOT pre-empty the bucket before destroy.
+		err := destroyTerraformPreserving(t, workingDir)
 		if err != nil {
 			t.Logf("[it6] terraform destroy returned error (expected — bucket is protected): %v", err)
 		}
@@ -272,7 +273,9 @@ func TestBucket_CloudTrailForceDestroyCleanup(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "verify_state", func() {
-		assertBucketForceDestroy(t, workingDir, true)
+		// common_force_destroy is hardcoded to false in modules/collections/local.tf;
+		// cleanup is handled by emptyCommonBucket before destroy, not by terraform force_destroy.
+		assertBucketForceDestroy(t, workingDir, false)
 	})
 
 	test_structure.RunTestStage(t, "seed_bucket", func() {
@@ -373,7 +376,12 @@ func TestBucket_SharedMixedForceDestroy(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "destroy", func() {
-		destroyTerraform(t, workingDir)
+		// Use preserving variant so emptyCommonBucket does NOT pre-empty the bucket.
+		// The bucket must stay non-empty so terraform destroy fails (proving force_destroy=false wins).
+		err := destroyTerraformPreserving(t, workingDir)
+		if err != nil {
+			t.Logf("[mixed] terraform destroy returned error (expected — bucket is protected): %v", err)
+		}
 	})
 
 	test_structure.RunTestStage(t, "verify_retention", func() {

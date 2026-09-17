@@ -21,6 +21,14 @@ func InitTerraform(t *testing.T, workingDir string, vars map[string]interface{},
 		Vars:         vars,
 		VarFiles:     varFiles,
 		NoColor:      true,
+		RetryableTerraformErrors: map[string]string{
+			// Sumo Logic validates IAM role access during source creation; IAM propagation can take
+			// up to ~30s after role creation so the first apply sometimes gets AccessDenied.
+			".*collectors.validation.fields.invalid.*": "Sumo Logic source IAM role propagation delay.",
+			// When switching source types (e.g. Lambda→KF), the old source may still be visible
+			// by name in Sumo Logic when the new source is created. Retrying after deletion completes.
+			".*collectors.validation.name.duplicate.*": "Sumo Logic source name conflict during source type switch.",
+		},
 	})
 	test_structure.SaveTerraformOptions(t, workingDir, opts)
 	terraform.Init(t, opts)

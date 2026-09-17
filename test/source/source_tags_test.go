@@ -219,7 +219,7 @@ func TestTags_RemoveTags(t *testing.T) {
 		opts := test_structure.LoadTerraformOptions(t, workingDir)
 		kfLogsStream := terraform.Output(t, opts, "kf_logs_stream")
 		if kfLogsStream != "" {
-			actual := validateS3BucketTags(t, kfLogsStream, prunedTags)
+			actual := validateKinesisFirehoseTags(t, kfLogsStream, prunedTags)
 			testresources.AssertTagsAbsent(t, "kf_logs_stream:"+kfLogsStream, actual, []string{"remove-me"})
 		}
 	})

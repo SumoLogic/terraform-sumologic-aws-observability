@@ -346,8 +346,10 @@ func TestUpdate_AccountAlias(t *testing.T) {
 		counts := redeployTerraform(t, workingDir, updatedVars, "")
 		t.Logf("[update] Alias change: %d added, %d changed, %d destroyed",
 			counts.Add, counts.Change, counts.Destroy)
-		if counts.Destroy > 0 {
-			t.Errorf("[update] Unexpected destroys after alias update: %d", counts.Destroy)
+		// sumologic_async_aws_lambda_invocation must be replaced when alias changes (expected).
+		// More than 1 destroy would indicate unintended infrastructure recreation.
+		if counts.Destroy > 1 {
+			t.Errorf("[update] Too many destroys after alias update: %d (expected ≤1)", counts.Destroy)
 		}
 	})
 

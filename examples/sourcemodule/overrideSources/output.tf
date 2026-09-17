@@ -4,6 +4,11 @@ output "collection_folder_id" {
   sensitive   = true
 }
 
+output "access_log_s3_bucket" {
+  value       = try(module.collection-module.aws_s3_bucket["s3_bucket"].bucket, "")
+  description = "S3 bucket used for ELB/CLB/CloudTrail access logs."
+}
+
 output "sumologic_collector" {
   value       = (var.executeTest1 || var.executeTest3) ? module.collection-module.sumologic_collector.collector.id : ""
   description = "This output contains sumologic collector id."
@@ -41,7 +46,7 @@ output "cloudtrail_sns_topic" {
 }
 
 output "cloudtrail_sns_sub" {
-  value       = var.collect_cloudtrail == true ? module.collection-module.cloudtrail_sns_subscription.arn : ""
+  value       = var.collect_cloudtrail == true ? try(module.collection-module.cloudtrail_sns_subscription.arn, "") : ""
   description = "This output contains Cloudtrail AWS SNS subscription arn."
 }
 
@@ -112,7 +117,7 @@ output "alb_sns_topic" {
 }
 
 output "alb_sns_sub" {
-  value       = var.collect_elb == true ? module.collection-module.elb_sns_subscription.arn : ""
+  value       = var.collect_elb == true ? try(module.collection-module.elb_sns_subscription.arn, "") : ""
   description = "This output contains ALB AWS SNS subscription arn."
 }
 

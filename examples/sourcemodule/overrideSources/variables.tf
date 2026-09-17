@@ -324,7 +324,7 @@ variable "create_s3_bucket" {
 variable "s3_name" {
   type        = string
   description = "Required if you already have a S3 bucket."
-  default     = ""
+  default     = "aws-observability-placeholder"
 }
 variable "executeTest1" {
   type        = bool

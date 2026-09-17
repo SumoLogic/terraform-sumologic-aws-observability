@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -25,6 +26,18 @@ const (
 	testSourceTFVars = "../../examples/sourcemodule/testSource/main.auto.tfvars"
 	region           = "us-east-1"
 )
+
+var (
+	awsAccountIDOnce sync.Once
+	awsAccountID     string
+)
+
+func resolveAWSAccountID() string {
+	awsAccountIDOnce.Do(func() {
+		awsAccountID = runShell("aws sts get-caller-identity --query Account --output text 2>/dev/null")
+	})
+	return awsAccountID
+}
 
 // e2eRetryDelays matches the CF test retry schedule for Sumo source validation.
 var e2eRetryDelays = []time.Duration{
@@ -98,6 +111,8 @@ func sumoSearchCfg() testresources.Config {
 		SumoBaseURL:   getSumologicURL(),
 		SumoAccessID:  getProperty("sumologic_access_id"),
 		SumoAccessKey: getProperty("sumologic_access_key"),
+		SumoOrgID:     getProperty("sumologic_organization_id"),
+		SumoEnv:       getProperty("sumologic_environment"),
 		AWSRegion:     region,
 	}
 }
@@ -136,6 +151,7 @@ var ferToTFResource = map[string]string{
 	"awsobservabilitygenericcloudwatchlogsfer":      "sumologic_field_extraction_rule.AwsObservabilityGenericCloudWatchLogsFER",
 	"awsobservabilityrdscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilityRdsCloudTrailLogsFER",
 	"awsobservabilitysnscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilitySNSCloudTrailLogsFER",
+	"awsobservabilitysqscloudtraillogsfer":          "sumologic_field_extraction_rule.AwsObservabilitySQSCloudTrailLogsFER",
 }
 
 // fieldToTFResource maps Sumo Logic field names to their Terraform resource addresses in field.tf.
@@ -157,6 +173,7 @@ var fieldToTFResource = map[string]string{
 	"dbclusteridentifier":  "sumologic_field.dbclusteridentifier",
 	"dbinstanceidentifier": "sumologic_field.dbinstanceidentifier",
 	"topicname":            "sumologic_field.topicname",
+	"queuename":           "sumologic_field.queuename",
 }
 
 // importExistingSumoFields queries the Sumo Logic Fields API and imports pre-existing fields
@@ -581,6 +598,16 @@ func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
 // destroyTerraformAllowingErrors runs terraform destroy and returns any error rather than
 // failing the test. Use this when the destroy is expected to fail (e.g. BucketNotEmpty).
 func destroyTerraformAllowingErrors(t *testing.T, workingDir string) error {
+	return destroyTerraformAllowingErrorsOpts(t, workingDir, false)
+}
+
+// destroyTerraformPreserving is like destroyTerraformAllowingErrors but skips the
+// pre-destroy bucket emptying. Use for tests that verify bucket retention (force_destroy=false).
+func destroyTerraformPreserving(t *testing.T, workingDir string) error {
+	return destroyTerraformAllowingErrorsOpts(t, workingDir, true)
+}
+
+func destroyTerraformAllowingErrorsOpts(t *testing.T, workingDir string, preserveBucket bool) error {
 	t.Helper()
 	abs, _ := filepath.Abs(workingDir)
 	optsFile := filepath.Join(abs, ".test-data", "TerraformOptions.json")
@@ -592,7 +619,18 @@ func destroyTerraformAllowingErrors(t *testing.T, workingDir string) error {
 	opts.ExtraArgs.Destroy = append(opts.ExtraArgs.Destroy, "-lock=false")
 	test_structure.SaveTerraformOptions(t, workingDir, opts)
 
+	if !preserveBucket {
+		emptyCommonBucket(t, opts)
+	}
 	_, err := terraform.DestroyE(t, opts)
+	// CloudTrail (or other services) may write new S3 objects in the window between
+	// emptyCommonBucket and the actual bucket deletion, causing BucketNotEmpty. Re-empty
+	// and retry once.
+	if err != nil && !preserveBucket && strings.Contains(err.Error(), "BucketNotEmpty") {
+		t.Logf("[destroy] BucketNotEmpty on first attempt — re-emptying bucket and retrying")
+		emptyCommonBucket(t, opts)
+		_, err = terraform.DestroyE(t, opts)
+	}
 	// Clean up state files regardless of destroy outcome.
 	os.RemoveAll(filepath.Join(abs, ".test-data"))
 	os.Remove(filepath.Join(abs, "terraform.tfstate"))
@@ -610,9 +648,24 @@ func destroyTerraform(t *testing.T, workingDir string) {
 		removeSumoFieldsFromState(t, opts)
 		// Pass -lock=false on destroy to tolerate stale lock files from interrupted runs.
 		opts.ExtraArgs.Destroy = append(opts.ExtraArgs.Destroy, "-lock=false")
+		emptyCommonBucket(t, opts)
 		test_structure.SaveTerraformOptions(t, workingDir, opts)
 	}
 	testresources.DestroyTerraform(t, workingDir)
+}
+
+// emptyCommonBucket empties the common S3 bucket created by the stack before terraform destroy.
+// This is needed because modules/collections always creates the bucket with force_destroy=false;
+// without pre-emptying it, terraform destroy fails with BucketNotEmpty on any test that writes
+// to the bucket (ELB/CLB access logs, CloudTrail, KF failure records, etc.).
+func emptyCommonBucket(t *testing.T, opts *terraform.Options) {
+	t.Helper()
+	bucket, err := terraform.OutputE(t, opts, "access_log_s3_bucket")
+	if err != nil || bucket == "" {
+		return
+	}
+	t.Logf("[cleanup] emptying S3 bucket %s before destroy", bucket)
+	runShell(fmt.Sprintf("aws s3 rm s3://%s --recursive 2>/dev/null; true", bucket))
 }
 
 // runShell executes a shell command, returns trimmed stdout. Empty string on error.
@@ -974,7 +1027,7 @@ func validateIAMRoleTags(t *testing.T, roleName string, expectedTags map[string]
 }
 
 // validateKinesisFirehoseTags fetches Firehose stream tags and asserts expected tags are present.
-func validateKinesisFirehoseTags(t *testing.T, streamName string, expectedTags map[string]string) {
+func validateKinesisFirehoseTags(t *testing.T, streamName string, expectedTags map[string]string) map[string]string {
 	t.Helper()
 	out := runShell(fmt.Sprintf(
 		`aws firehose list-tags-for-delivery-stream --delivery-stream-name "%s" --region %s --query 'Tags' --output json 2>/dev/null`,
@@ -988,14 +1041,17 @@ func validateKinesisFirehoseTags(t *testing.T, streamName string, expectedTags m
 			t.Errorf("[tags] KF stream %s tag %q = %q, want %q", streamName, k, got, v)
 		}
 	}
+	return actual
 }
 
 // validateCloudTrailTags fetches CloudTrail trail tags and asserts expected tags are present.
 func validateCloudTrailTags(t *testing.T, trailName string, expectedTags map[string]string) {
 	t.Helper()
+	// list-tags requires the full trail ARN, not just the trail name.
+	arn := fmt.Sprintf("arn:aws:cloudtrail:%s:%s:trail/%s", region, resolveAWSAccountID(), trailName)
 	out := runShell(fmt.Sprintf(
 		`aws cloudtrail list-tags --resource-id-list "%s" --region %s --query 'ResourceTagList[0].TagsList' --output json 2>/dev/null`,
-		trailName, region,
+		arn, region,
 	))
 	actual := parseTagsJSON(out)
 	for k, v := range expectedTags {
