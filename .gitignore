@@ -134,6 +134,7 @@ main.auto.tfvars
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
+terraform.tfstate.*.backup
 .terraform.lock.hcl
 .test-data
 test/*/test_output
