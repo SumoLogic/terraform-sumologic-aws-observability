@@ -106,22 +106,22 @@ output "sumologic_field_apiid" {
 
 # FER IDs
 output "sumologic_field_extraction_rule_apigateway" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityApiGatewayCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityApiGatewayCloudTrailLogsFER[0].id, "")
   description = "API Gateway CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_apigateway_access_logs" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityApiGatewayAccessLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityApiGatewayAccessLogsFER[0].id, "")
   description = "API Gateway Access Logs FER ID."
 }
 
 output "sumologic_field_extraction_rule_alb" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityAlbAccessLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityAlbAccessLogsFER[0].id, "")
   description = "ALB Access Logs FER ID."
 }
 
 output "sumologic_field_extraction_rule_alb_cloudtrail" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityALBCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityALBCloudTrailLogsFER[0].id, "")
   description = "ALB CloudTrail FER ID."
 }
 
@@ -131,32 +131,32 @@ output "sumologic_field_extraction_rule_elb" {
 }
 
 output "sumologic_field_extraction_rule_clb_cloudtrail" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityCLBCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityCLBCloudTrailLogsFER[0].id, "")
   description = "CLB CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_nlb_cloudtrail" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityNLBCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityNLBCloudTrailLogsFER[0].id, "")
   description = "NLB CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_dynamodb" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityDynamoDBCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityDynamoDBCloudTrailLogsFER[0].id, "")
   description = "DynamoDB CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_elasticache" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityElastiCacheCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityElastiCacheCloudTrailLogsFER[0].id, "")
   description = "ElastiCache CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_ecs" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityECSCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityECSCloudTrailLogsFER[0].id, "")
   description = "ECS CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_ec2metrics" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityEC2CloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityEC2CloudTrailLogsFER[0].id, "")
   description = "EC2 CloudTrail FER ID."
 }
 
@@ -166,12 +166,12 @@ output "sumologic_field_extraction_rule_lambda" {
 }
 
 output "sumologic_field_extraction_rule_lambda_cw" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityLambdaCloudWatchLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityLambdaCloudWatchLogsFER[0].id, "")
   description = "Lambda CloudWatch FER ID."
 }
 
 output "sumologic_field_extraction_rule_rds" {
-  value       = sumologic_field_extraction_rule.AwsObservabilityRdsCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilityRdsCloudTrailLogsFER[0].id, "")
   description = "RDS CloudTrail FER ID."
 }
 
@@ -181,11 +181,11 @@ output "sumologic_field_extraction_rule_cw" {
 }
 
 output "sumologic_field_extraction_rule_sns" {
-  value       = sumologic_field_extraction_rule.AwsObservabilitySNSCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilitySNSCloudTrailLogsFER[0].id, "")
   description = "SNS CloudTrail FER ID."
 }
 
 output "sumologic_field_extraction_rule_sqs" {
-  value       = sumologic_field_extraction_rule.AwsObservabilitySQSCloudTrailLogsFER.id
+  value       = try(sumologic_field_extraction_rule.AwsObservabilitySQSCloudTrailLogsFER[0].id, "")
   description = "SQS CloudTrail FER ID."
 }

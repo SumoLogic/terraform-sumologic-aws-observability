@@ -243,6 +243,7 @@ func importExistingSumoFields(t *testing.T, opts *terraform.Options) {
 
 	// Import pre-existing Field Extraction Rules to avoid fer:invalid_extraction_rule on re-runs.
 	existingFERs := listSumoFERs(t, baseURL)
+	t.Logf("[import] FERs from Sumo API: %d", len(existingFERs))
 	for name, id := range existingFERs {
 		addr, ok := ferToTFResource[name]
 		if !ok {
@@ -554,10 +555,10 @@ func redeployTerraform(t *testing.T, workingDir string, vars map[string]interfac
 	return testresources.RedeployTerraform(t, workingDir, vars, varFiles)
 }
 
-// removeSumoFieldsFromState removes ALL sumologic_field resources from state before destroy.
-// Fields persist in the Sumo org (they're org-wide and referenced by sources/FERs across
-// many deployments). Removing them from state prevents terraform destroy from attempting to
-// delete them — which would fail anyway because Sumo rejects deletion of in-use fields.
+// removeSumoFieldsFromState removes ALL sumologic_field and sumologic_field_extraction_rule
+// resources from state before destroy. These are org-wide persistent resources — removing them
+// from state prevents terraform destroy from deleting them. They are imported before each deploy
+// via importExistingSumoFields so the next apply treats them as already-managed.
 func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
 	t.Helper()
 
@@ -582,7 +583,7 @@ func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
 
 	for _, addr := range strings.Split(string(stateOut), "\n") {
 		addr = strings.TrimSpace(addr)
-		if !strings.HasPrefix(addr, "sumologic_field.") {
+		if !strings.HasPrefix(addr, "sumologic_field.") && !strings.HasPrefix(addr, "sumologic_field_extraction_rule.") {
 			continue
 		}
 		rmCmd := exec.Command("terraform", "state", "rm", "-lock=false", addr)
@@ -590,7 +591,7 @@ func removeSumoFieldsFromState(t *testing.T, opts *terraform.Options) {
 		if out, rmErr := rmCmd.CombinedOutput(); rmErr != nil {
 			t.Logf("[cleanup] could not remove %s from state: %v\n%s", addr, rmErr, string(out))
 		} else {
-			t.Logf("[cleanup] removed %s from state (field persists in Sumo org)", addr)
+			t.Logf("[cleanup] removed %s from state (persists in Sumo org)", addr)
 		}
 	}
 }
@@ -756,14 +757,15 @@ func fixAccessLogBuckets(t *testing.T, workingDir, albARN, clbName string) {
 		))
 		if current != bucket {
 			t.Logf("[e2e] CLB access log bucket mismatch: got %q, want %q — correcting", current, bucket)
-			runShell(fmt.Sprintf(
-				`aws elb modify-load-balancer-attributes --load-balancer-name "%s" --region %s `+
-					`--load-balancer-attributes '{"AccessLog":{"Enabled":true,"S3BucketName":"%s","EmitInterval":5,"S3BucketPrefix":"classicloadbalancing"}}'`,
-				clbName, region, bucket,
-			))
 		} else {
-			t.Logf("[e2e] CLB access log bucket correct: %s", bucket)
+			t.Logf("[e2e] CLB access log bucket correct: %s — ensuring EmitInterval=5", bucket)
 		}
+		// Always force EmitInterval=5 so logs arrive within the test window (default can be 60 minutes).
+		runShell(fmt.Sprintf(
+			`aws elb modify-load-balancer-attributes --load-balancer-name "%s" --region %s `+
+				`--load-balancer-attributes '{"AccessLog":{"Enabled":true,"S3BucketName":"%s","EmitInterval":5,"S3BucketPrefix":"classicloadbalancing"}}'`,
+			clbName, region, bucket,
+		))
 	}
 }
 

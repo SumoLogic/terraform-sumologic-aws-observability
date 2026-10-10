@@ -23,12 +23,12 @@ func TestUpdate_AddCloudTrail(t *testing.T) {
 		"create_collector":         true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_initial", func() {
@@ -78,12 +78,12 @@ func TestUpdate_LambdaToKinesis(t *testing.T) {
 		"create_collector":         true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy_lambda", func() {
 		counts := deployTerraform(t, workingDir, lambdaVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_lambda", func() {
@@ -136,12 +136,12 @@ func TestUpdate_NamespaceChange(t *testing.T) {
 		"metric_namespaces":        []interface{}{"AWS/EC2", "AWS/Lambda"},
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_initial", func() {
@@ -192,12 +192,12 @@ func TestUpdate_MetricsCWToKF(t *testing.T) {
 		"create_collector":          true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy_cw", func() {
 		counts := deployTerraform(t, workingDir, cwVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_cw", func() {
@@ -267,12 +267,12 @@ func TestUpdate_AutoEnableNewToBoth(t *testing.T) {
 		"create_collector":          true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_no_elb", func() {
@@ -324,12 +324,12 @@ func TestUpdate_AccountAlias(t *testing.T) {
 		"aws_account_alias":        "devaccount",
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_initial", func() {

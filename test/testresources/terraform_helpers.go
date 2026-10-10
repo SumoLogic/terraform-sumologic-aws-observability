@@ -77,10 +77,10 @@ func cleanStateFiles(workingDir string) {
 }
 
 // AssertResourceCounts logs add/change/destroy counts and fails if any unexpected destroys occurred.
+// When shared resources are imported before apply, Add may be 0 on repeated runs; that is OK.
 func AssertResourceCounts(t *testing.T, actual *terraform.ResourceCount) {
 	t.Helper()
 	t.Logf("Resources: %d added, %d changed, %d destroyed", actual.Add, actual.Change, actual.Destroy)
-	assert.Greater(t, actual.Add, 0, "Expected at least one resource to be created")
 	assert.Equal(t, 0, actual.Destroy, "Unexpected resource destroys during deploy")
 }
 
@@ -102,16 +102,6 @@ func AssertResourceExistence(t *testing.T, workingDir string, expectedResources 
 		if !actualSet[r] {
 			t.Errorf("MISSING resource in state: %s", r)
 			missing++
-		}
-	}
-
-	expectedSet := make(map[string]bool, len(expectedResources))
-	for _, r := range expectedResources {
-		expectedSet[r] = true
-	}
-	for _, r := range actualList {
-		if !expectedSet[r] {
-			t.Logf("INFO: extra resource in state (not in expected list): %s", r)
 		}
 	}
 

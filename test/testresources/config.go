@@ -90,11 +90,25 @@ func readTFVars(path string) map[string]string {
 		line := scanner.Text()
 		if idx := strings.Index(line, "="); idx >= 0 {
 			key := strings.TrimSpace(line[:idx])
-			val := strings.TrimSpace(line[idx+1:])
-			val = strings.Trim(val, `"`)
-			if key != "" {
-				result[key] = val
+			rest := strings.TrimSpace(line[idx+1:])
+			if key == "" {
+				continue
 			}
+			var val string
+			if strings.HasPrefix(rest, `"`) {
+				inner := rest[1:]
+				if end := strings.Index(inner, `"`); end >= 0 {
+					val = inner[:end]
+				} else {
+					val = inner
+				}
+			} else {
+				fields := strings.Fields(rest)
+				if len(fields) > 0 {
+					val = fields[0]
+				}
+			}
+			result[key] = val
 		}
 	}
 	return result

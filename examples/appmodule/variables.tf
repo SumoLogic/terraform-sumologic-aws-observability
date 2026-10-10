@@ -40,6 +40,17 @@ variable "sumologic_access_key" {
   }
 }
 
+variable "installation_apps_list" {
+  description = "List of Sumo Logic apps to install. If empty, all default apps are installed."
+  type = list(object({
+    uuid       = string
+    name       = string
+    version    = string
+    parameters = optional(map(string), {})
+  }))
+  default = []
+}
+
 variable "sumo_api_endpoint" {
   type        = string
   description = "Sumo Logic API endpoint URL. E.g. https://api.us2.sumologic.com/api/"

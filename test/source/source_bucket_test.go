@@ -26,12 +26,12 @@ func TestBucket_SharedPolicyMerge(t *testing.T) {
 		"executeTest1":              true, // exposes aws_s3 and aws_iam_role outputs
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -111,12 +111,12 @@ func TestBucket_ExistingPolicyAppend(t *testing.T) {
 		},
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -472,12 +472,12 @@ func TestBucket_AllExistingSingleShared(t *testing.T) {
 		},
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -570,12 +570,12 @@ func TestBucket_AllExisting(t *testing.T) {
 		},
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {

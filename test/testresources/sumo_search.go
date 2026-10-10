@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var sumoHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 // SumoSearchClient wraps the Sumo Logic Search Job and Metrics APIs.
 type SumoSearchClient struct {
 	Cfg Config
@@ -65,7 +67,7 @@ func (s *SumoSearchClient) GetCollectorName(collectorID string) (string, error) 
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/collectors/%s", s.Cfg.SumoBaseURL, collectorID), nil)
 	req.Header.Set("Accept", "application/json")
 	req.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := sumoHTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -148,7 +150,7 @@ func (s *SumoSearchClient) runSearchJob(query, timeRange string) (int, error) {
 	req.Header.Set("Accept", "application/json")
 	req.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := sumoHTTPClient.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -171,7 +173,7 @@ func (s *SumoSearchClient) runSearchJob(query, timeRange string) (int, error) {
 		req2, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/search/jobs/%s", s.Cfg.SumoBaseURL, jobID), nil)
 		req2.Header.Set("Accept", "application/json")
 		req2.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
-		resp2, err := http.DefaultClient.Do(req2)
+		resp2, err := sumoHTTPClient.Do(req2)
 		if err != nil {
 			time.Sleep(5 * time.Second)
 			continue
@@ -203,7 +205,7 @@ func (s *SumoSearchClient) metricsHasData(t *testing.T, query string) bool {
 	req.Header.Set("Accept", "application/json")
 	req.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := sumoHTTPClient.Do(req)
 	if err != nil {
 		t.Logf("[metrics-api] Request failed: %v", err)
 		return false
@@ -234,7 +236,7 @@ func (s *SumoSearchClient) getSource(collectorID, sourceID string) (*SourceInfo,
 		fmt.Sprintf("%s/api/v1/collectors/%s/sources/%s", s.Cfg.SumoBaseURL, collectorID, sourceID), nil)
 	req.Header.Set("Accept", "application/json")
 	req.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := sumoHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +255,7 @@ func (s *SumoSearchClient) getSource(collectorID, sourceID string) (*SourceInfo,
 func (s *SumoSearchClient) deleteJob(jobID string) {
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/search/jobs/%s", s.Cfg.SumoBaseURL, jobID), nil)
 	req.SetBasicAuth(s.Cfg.SumoAccessID, s.Cfg.SumoAccessKey)
-	http.DefaultClient.Do(req)
+	sumoHTTPClient.Do(req)
 }
 
 func isMetricsSource(src SourceInfo) bool {

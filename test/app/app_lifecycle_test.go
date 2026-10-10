@@ -10,17 +10,20 @@ import (
 
 // TestLifecycle_PlanValidation verifies that valid inputs pass plan and invalid
 // inputs (bad environment value) fail plan with a validation error.
+// Subtests are sequential (not parallel) so they can safely share the same
+// already-initialized working directory without a concurrent init race.
 func TestLifecycle_PlanValidation(t *testing.T) {
 	t.Parallel()
 
+	// Shared init — run once, reused by both subtests.
+	baseOpts := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+		TerraformDir: appModuleDir,
+		NoColor:      true,
+	})
+	terraform.Init(t, baseOpts)
+
 	t.Run("ValidEnvironment", func(t *testing.T) {
-		t.Parallel()
-		opts := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-			TerraformDir: appModuleDir,
-			NoColor:      true,
-		})
-		terraform.Init(t, opts)
-		_, err := terraform.RunTerraformCommandE(t, opts, "plan", "-input=false")
+		_, err := terraform.PlanE(t, baseOpts)
 		if err != nil {
 			t.Logf("[plan] Valid config plan note: %v", err)
 		} else {
@@ -29,14 +32,12 @@ func TestLifecycle_PlanValidation(t *testing.T) {
 	})
 
 	t.Run("InvalidEnvironment", func(t *testing.T) {
-		t.Parallel()
 		opts := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 			TerraformDir: appModuleDir,
 			Vars:         map[string]interface{}{"sumologic_environment": "invalid-env"},
 			NoColor:      true,
 		})
-		terraform.Init(t, opts)
-		_, err := terraform.RunTerraformCommandE(t, opts, "plan", "-input=false")
+		_, err := terraform.PlanE(t, opts)
 		if err == nil {
 			t.Error("[plan] Expected plan to fail with invalid environment, but it succeeded")
 		} else {
@@ -70,12 +71,12 @@ func TestLifecycle_AppSubset(t *testing.T) {
 		"installation_apps_list": subsetApps,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyApp(t)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployApp(t, vars)
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyApp(t)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {

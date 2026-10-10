@@ -47,12 +47,12 @@ func TestExisting_OverrideSources(t *testing.T) {
 		"s3_name":                  bucket.Name,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -102,12 +102,12 @@ func TestExisting_CloudTrailBucket(t *testing.T) {
 		"executeTest4":             true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -192,12 +192,12 @@ func TestExisting_AllSourceURLs(t *testing.T) {
 		"cloudwatch_metrics_source_url": sources[4].s.SourceURL(),
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {

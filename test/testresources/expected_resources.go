@@ -77,7 +77,8 @@ func ExpectedResources(vars map[string]interface{}) []string {
 	// Common Sumo Logic fields always created by testSource module
 	for _, field := range []string{"account", "region", "accountid", "namespace", "loadbalancer",
 		"loadbalancername", "apiname", "tablename", "instanceid", "clustername",
-		"cacheclusterid", "functionname", "networkloadbalancer", "dbidentifier"} {
+		"cacheclusterid", "functionname", "networkloadbalancer", "dbidentifier",
+		"dbclusteridentifier", "dbinstanceidentifier", "topicname", "queuename"} {
 		resources = append(resources, "sumologic_field."+field)
 	}
 

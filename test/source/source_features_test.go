@@ -22,12 +22,12 @@ func TestFeature_MetricsDisabled(t *testing.T) {
 		"create_collector":         true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -54,12 +54,12 @@ func TestFeature_CloudTrailDisabled(t *testing.T) {
 		"create_collector":         true,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -96,12 +96,12 @@ func TestFeature_CWSubscribeNewOnly(t *testing.T) {
 		testresources.GenerateCWLogsTraffic(t, region, nonMatchingGroup, 1)
 	})
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {

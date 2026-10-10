@@ -39,12 +39,12 @@ func TestTags_Propagation(t *testing.T) {
 		alb.Delete(t)
 	})
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, vars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -124,12 +124,12 @@ func TestTags_UpdateExisting(t *testing.T) {
 		"aws_resource_tags":        initialTags,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_initial", func() {
@@ -188,12 +188,12 @@ func TestTags_RemoveTags(t *testing.T) {
 		"aws_resource_tags":        initialTags,
 	}
 
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyTerraform(t, workingDir)
+	})
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployTerraform(t, workingDir, initialVars, "")
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyTerraform(t, workingDir)
 	})
 
 	test_structure.RunTestStage(t, "health_initial", func() {

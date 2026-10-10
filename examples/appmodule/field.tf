@@ -3,6 +3,24 @@ resource "time_sleep" "wait_for_10_seconds" {
   create_duration = "10s"
 }
 
+locals {
+  # The module always installs all 15 apps regardless of installation_apps_list,
+  # so app install jobs always create these FERs. Setting all to true (count=0)
+  # prevents field.tf from creating them and avoids "FER already exists" conflicts.
+  install_lambda      = true
+  install_alb         = true
+  install_dynamodb    = true
+  install_ecs         = true
+  install_elasticache = true
+  install_sns         = true
+  install_sqs         = true
+  install_apigateway  = true
+  install_rds         = true
+  install_ec2         = true
+  install_clb         = true
+  install_nlb         = true
+}
+
 # common fields
 resource "sumologic_field" "account" {
   data_type  = "String"
@@ -132,8 +150,9 @@ resource "sumologic_field" "queuename" {
   state      = "Enabled"
 }
 
-# ALB access log FER
+# ALB access log FER — skipped when ALB app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityAlbAccessLogsFER" {
+  count            = local.install_alb ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityAlbAccessLogsFER"
   scope            = "account=* region=* (http or https or h2 or grpcs or ws or wss)"
@@ -147,8 +166,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityAlbAccessLogsFER" {
   enabled          = true
 }
 
-# API Gateway CloudTrail FER
+# API Gateway CloudTrail FER — skipped when API Gateway app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityApiGatewayCloudTrailLogsFER" {
+  count            = local.install_apigateway ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityApiGatewayCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"apigateway.amazonaws.com\""
@@ -163,8 +183,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityApiGatewayCloudTrail
   enabled          = true
 }
 
-# API Gateway Access Logs FER
+# API Gateway Access Logs FER — skipped when API Gateway app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityApiGatewayAccessLogsFER" {
+  count            = local.install_apigateway ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityApiGatewayAccessLogsFER"
   scope            = "account=* region=* apiId domainName stage requestId status"
@@ -177,8 +198,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityApiGatewayAccessLogs
   enabled          = true
 }
 
-# ALB CloudTrail FER
+# ALB CloudTrail FER — skipped when ALB app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityALBCloudTrailLogsFER" {
+  count            = local.install_alb ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityALBCloudTrailLogsFER"
   scope            = "account=* eventSource eventName \"elasticloadbalancing.amazonaws.com\" \"2015-12-01\""
@@ -196,8 +218,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityALBCloudTrailLogsFER
   enabled          = true
 }
 
-# CLB CloudTrail FER
+# CLB CloudTrail FER — skipped when CLB app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityCLBCloudTrailLogsFER" {
+  count            = local.install_clb ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityCLBCloudTrailLogsFER"
   scope            = "account=* eventSource eventName \"elasticloadbalancing.amazonaws.com\" \"2012-06-01\""
@@ -211,8 +234,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityCLBCloudTrailLogsFER
   enabled          = true
 }
 
-# NLB CloudTrail FER
+# NLB CloudTrail FER — skipped when NLB app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityNLBCloudTrailLogsFER" {
+  count            = local.install_nlb ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityNLBCloudTrailLogsFER"
   scope            = "account=* eventSource eventName \"elasticloadbalancing.amazonaws.com\" \"2015-12-01\""
@@ -232,8 +256,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityNLBCloudTrailLogsFER
   enabled          = true
 }
 
-# DynamoDB CloudTrail FER
+# DynamoDB CloudTrail FER — skipped when DynamoDB app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityDynamoDBCloudTrailLogsFER" {
+  count            = local.install_dynamodb ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityDynamoDBCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"dynamodb.amazonaws.com\""
@@ -247,8 +272,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityDynamoDBCloudTrailLo
   enabled          = true
 }
 
-# EC2 CloudTrail FER
+# EC2 CloudTrail FER — skipped when EC2 app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityEC2CloudTrailLogsFER" {
+  count            = local.install_ec2 ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityEC2CloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"ec2.amazonaws.com\""
@@ -272,8 +298,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityEC2CloudTrailLogsFER
   enabled          = true
 }
 
-# ECS CloudTrail FER
+# ECS CloudTrail FER — skipped when ECS app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityECSCloudTrailLogsFER" {
+  count            = local.install_ecs ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityECSCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"ecs.amazonaws.com\""
@@ -288,8 +315,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityECSCloudTrailLogsFER
   enabled          = true
 }
 
-# ElasticCache CloudTrail FER
+# ElastiCache CloudTrail FER — skipped when ElastiCache app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityElastiCacheCloudTrailLogsFER" {
+  count            = local.install_elasticache ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityElastiCacheCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"elasticache.amazonaws.com\""
@@ -338,8 +366,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityFieldExtractionRule"
   enabled          = true
 }
 
-# Lambda CloudWatch FER
+# Lambda CloudWatch FER — skipped when Lambda app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityLambdaCloudWatchLogsFER" {
+  count            = local.install_lambda ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityLambdaCloudWatchLogsFER"
   scope            = "account=* region=* _sourceHost=/aws/lambda/*"
@@ -377,8 +406,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityGenericCloudWatchLog
   enabled          = true
 }
 
-# RDS CloudTrail FER
+# RDS CloudTrail FER — skipped when RDS app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilityRdsCloudTrailLogsFER" {
+  count            = local.install_rds ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilityRdsCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"rds.amazonaws.com\""
@@ -398,8 +428,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilityRdsCloudTrailLogsFER
   enabled          = true
 }
 
-# SNS CloudTrail FER
+# SNS CloudTrail FER — skipped when SNS app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilitySNSCloudTrailLogsFER" {
+  count            = local.install_sns ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilitySNSCloudTrailLogsFER"
   scope            = "account=* eventname eventsource \"sns.amazonaws.com\""
@@ -424,8 +455,9 @@ resource "sumologic_field_extraction_rule" "AwsObservabilitySNSCloudTrailLogsFER
   enabled          = true
 }
 
-# SQS CloudTrail FER
+# SQS CloudTrail FER — skipped when SQS app is installed (app creates it as a side effect)
 resource "sumologic_field_extraction_rule" "AwsObservabilitySQSCloudTrailLogsFER" {
+  count            = local.install_sqs ? 0 : 1
   depends_on       = [time_sleep.wait_for_10_seconds]
   name             = "AwsObservabilitySQSCloudTrailLogsFER"
   scope            = "account=* eventsource \"sqs.amazonaws.com\""

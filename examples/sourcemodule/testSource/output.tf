@@ -203,3 +203,23 @@ output "sumologic_field_dbidentifier" {
   value       = sumologic_field.dbidentifier.id
   description = "This output contains sumologic dbidentifier field id."
 }
+
+output "sumologic_field_dbclusteridentifier" {
+  value       = sumologic_field.dbclusteridentifier.id
+  description = "This output contains sumologic dbclusteridentifier field id."
+}
+
+output "sumologic_field_dbinstanceidentifier" {
+  value       = sumologic_field.dbinstanceidentifier.id
+  description = "This output contains sumologic dbinstanceidentifier field id."
+}
+
+output "sumologic_field_topicname" {
+  value       = sumologic_field.topicname.id
+  description = "This output contains sumologic topicname field id."
+}
+
+output "sumologic_field_queuename" {
+  value       = sumologic_field.queuename.id
+  description = "This output contains sumologic queuename field id."
+}

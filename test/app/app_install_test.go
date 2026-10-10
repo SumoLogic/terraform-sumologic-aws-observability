@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/SumoLogic/terraform-sumologic-aws-observability/test/testresources"
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
@@ -15,12 +14,14 @@ func TestInstall_AllAppsDefault(t *testing.T) {
 	t.Parallel()
 	workingDir := appModuleDir
 
+	// Cleanup runs first so it fires even if deploy fails, preventing stale state.
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyApp(t)
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployApp(t, map[string]interface{}{})
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyApp(t)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -71,18 +72,8 @@ func TestInstall_AllAppsDefault(t *testing.T) {
 			validateFieldExists(t, opts, out)
 		}
 
-		// Metric rules
-		for _, out := range []string{
-			"sumologic_metric_rule_nlb", "sumologic_metric_rule_api_gw",
-			"sumologic_metric_rule_rds_cluster", "sumologic_metric_rule_rds_instance",
-		} {
-			val := terraform.Output(t, opts, out)
-			if val == "" {
-				t.Errorf("[metric-rule] %s: empty", out)
-			} else {
-				t.Logf("[metric-rule] %s: %s (OK)", out, val)
-			}
-		}
+		// Note: Sumo metric rules (NLB, API GW, RDS) are created by app install jobs
+		// as side effects and are not exposed as Terraform outputs.
 	})
 }
 
@@ -92,12 +83,14 @@ func TestInstall_Idempotency(t *testing.T) {
 	t.Parallel()
 	workingDir := appModuleDir
 
+	// Cleanup runs first so it fires even if deploy fails, preventing stale state.
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyApp(t)
+	})
+
 	test_structure.RunTestStage(t, "deploy", func() {
 		counts := deployApp(t, map[string]interface{}{})
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyApp(t)
 	})
 
 	test_structure.RunTestStage(t, "health", func() {
@@ -124,6 +117,11 @@ func TestInstall_Idempotency(t *testing.T) {
 func TestInstall_DestroyAndRedeploy(t *testing.T) {
 	t.Parallel()
 
+	// Cleanup runs first so it fires even if any stage fails, preventing stale state.
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		destroyApp(t)
+	})
+
 	test_structure.RunTestStage(t, "first_deploy", func() {
 		counts := deployApp(t, map[string]interface{}{})
 		testresources.AssertResourceCounts(t, counts)
@@ -136,9 +134,6 @@ func TestInstall_DestroyAndRedeploy(t *testing.T) {
 	test_structure.RunTestStage(t, "second_deploy", func() {
 		counts := deployApp(t, map[string]interface{}{})
 		testresources.AssertResourceCounts(t, counts)
-	})
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		destroyApp(t)
 	})
 
 	test_structure.RunTestStage(t, "health_after_redeploy", func() {
