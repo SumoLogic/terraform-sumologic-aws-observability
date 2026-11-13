@@ -53,6 +53,9 @@ locals {
   cloudwatch_logs_source_name = var.cloudwatch_logs_source_details.source_name == "CloudWatch Logs (Region)" ? "CloudWatch Logs ${local.aws_region}" : var.cloudwatch_logs_source_details.source_name
   cloudwatch_logs_fields      = merge(var.cloudwatch_logs_source_details.fields, { account = var.aws_account_alias, region = local.aws_region, accountid = local.aws_account_id })
 
+  # Host Metrics sources (existing) - same fields as the host_metrics_add_fields CloudFormation template
+  host_metrics_fields = { account = var.aws_account_alias, accountid = local.aws_account_id, Namespace = "AWS/EC2" }
+
   # Common Bucket details
   create_cloudtrail_bucket      = local.create_cloudtrail_source && var.cloudtrail_source_details.bucket_details.create_bucket
   create_elb_bucket             = local.create_elb_source && var.elb_source_details.bucket_details.create_bucket

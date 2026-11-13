@@ -34,4 +34,6 @@ module "collection-module" {
   cloudtrail_source_url         = var.cloudtrail_source_url
   elb_log_source_url            = var.elb_log_source_url
   classic_lb_log_source_url     = var.classic_lb_log_source_url
+
+  add_fields_to_host_metrics_sources = var.add_fields_to_host_metrics_sources
 }
