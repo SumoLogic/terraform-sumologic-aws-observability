@@ -104,6 +104,23 @@ variable "cloudwatch_logs_source_url" {
   default     = ""
 }
 
+variable "add_fields_to_host_metrics_sources" {
+  type        = bool
+  description = <<EOT
+            Set to true to add the account, accountid and Namespace (AWS/EC2) fields to the existing Sumo Logic Host Metrics sources that collect from the EC2 instances of this AWS account and region.
+            The sources are discovered through the EC2 instances (and a Sumo Logic metrics query for the last hour); no source is created. The fields are removed again on terraform destroy.
+            Terraform equivalent of the host_metrics_add_fields CloudFormation template.
+            Requires python3 with the "sumologic-sdk" package (the same one the other existing-source options use) on the machine running Terraform and the ec2:DescribeInstances permission.
+        EOT
+  default     = false
+}
+
+variable "host_metrics_fields_version" {
+  type        = string
+  description = "Change this value to force the fields to be re-applied to the Host Metrics sources, e.g. after new EC2 instances or Host Metrics sources were added."
+  default     = "1"
+}
+
 variable "existing_iam_details" {
   type = object({
     create_iam_role = bool

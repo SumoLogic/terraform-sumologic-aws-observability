@@ -111,3 +111,9 @@ variable "classic_lb_log_source_url" {
   description = "Required if you are already collecting Classic LB logs. Provide the existing Sumo Logic Classic LB Source API URL."
   default     = ""
 }
+
+variable "add_fields_to_host_metrics_sources" {
+  type        = bool
+  description = "Set to true to add the account, accountid and Namespace fields to the existing Host Metrics sources of the EC2 instances in this AWS account and region."
+  default     = false
+}
